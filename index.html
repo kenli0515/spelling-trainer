@@ -156,7 +156,7 @@
       </label>
     </div>
     <div class="tts-note">
-      API Key 只保存在你当前浏览器的 localStorage，只会直接发给 Google 官方接口，不经过任何第三方服务器。使用前需要在 Google Cloud 控制台开通 "Cloud Text-to-Speech API"（注意不是 Speech-to-Text）并启用结算（每月有免费额度）。生成过的语音片段会缓存在浏览器本地（见下方"语音缓存库"），同一个单词/字母不会重复付费请求。开启此模式后，每次播放完还会自动生成一份"整段发音"的 mp3 供下载。
+      API Key 只保存在你当前浏览器的 localStorage，只会直接发给 Google 官方接口，不经过任何第三方服务器。使用前需要在 Google Cloud 控制台开通 "Cloud Text-to-Speech API"（注意不是 Speech-to-Text）并启用结算（每月有免费额度）。生成过的语音片段会用哈希值作为唯一标识缓存在浏览器本地（见下方"语音缓存库"），同一个单词/字母（相同语音+语速）不会重复付费请求。开启此模式后，每次播放完还会自动生成一份"整段发音"的 mp3 供下载，并同样存入缓存库。
     </div>
   </div>
 
@@ -227,12 +227,19 @@ let isPlaying = false;
 let stopRequested = false;
 let currentRunId = 0;
 
-const ttsUrlCache = new Map();   // in-memory: cacheKey -> blob URL (this session only)
+const ttsUrlCache = new Map();   // in-memory: hash -> blob URL (this session only)
 const silenceCache = new Map();
 let unlockSrc = null;
 let dbPromise = null;
 let activeResolvers = [];
 let sessionDownloadUrl = null;
+
+// ---- Hashing (SHA-256, hex) used as the stable cache key / filename for each TTS clip ----
+async function hashString(str) {
+  const enc = new TextEncoder().encode(str);
+  const digest = await crypto.subtle.digest('SHA-256', enc);
+  return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
 
 function openDB() {
   if (dbPromise) return dbPromise;
@@ -476,13 +483,14 @@ function extractLangCode(voiceName) {
 }
 
 async function fetchGoogleTTSUrl(text, apiKey, voiceName, rate) {
-  const cacheKey = `${voiceName}|${rate}|${text}`;
-  if (ttsUrlCache.has(cacheKey)) return ttsUrlCache.get(cacheKey);
+  const hash = await hashString(`${voiceName}|${rate}|${text}`);
 
-  const stored = await dbGet(cacheKey).catch(() => null);
+  if (ttsUrlCache.has(hash)) return ttsUrlCache.get(hash);
+
+  const stored = await dbGet(hash).catch(() => null);
   if (stored && stored.blob) {
     const url = URL.createObjectURL(stored.blob);
-    ttsUrlCache.set(cacheKey, url);
+    ttsUrlCache.set(hash, url);
     return url;
   }
 
@@ -505,9 +513,9 @@ async function fetchGoogleTTSUrl(text, apiKey, voiceName, rate) {
   for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
   const blob = new Blob([new Uint8Array(byteNumbers)], { type: 'audio/mp3' });
   const url = URL.createObjectURL(blob);
-  ttsUrlCache.set(cacheKey, url);
+  ttsUrlCache.set(hash, url);
 
-  await dbPut({ key: cacheKey, text, voiceName, rate, size: blob.size, createdAt: Date.now(), blob }).catch(() => {});
+  await dbPut({ key: hash, text, voiceName, rate, size: blob.size, createdAt: Date.now(), blob }).catch(() => {});
   renderCacheList();
 
   return url;
@@ -642,11 +650,29 @@ async function buildSessionMp3(steps, runId) {
     if (runId !== currentRunId) return;
 
     const blob = new Blob(mp3Data, { type: 'audio/mp3' });
+    const uniqueWords = [...new Set(steps.filter(s => s.kind === 'word').map(s => s.word))];
+    const label = uniqueWords.length <= 3
+      ? uniqueWords.join('、')
+      : `${uniqueWords.slice(0, 3).join('、')} 等${uniqueWords.length}词`;
+    const sessionHash = await hashString(steps.map(s => s.text || `gap${s.dur}`).join('|') + '|' + Date.now());
+
     sessionDownloadUrl = URL.createObjectURL(blob);
     linkEl.href = sessionDownloadUrl;
-    linkEl.download = `spelling_session_${Date.now()}.mp3`;
-    statusEl.textContent = `整段发音已生成 (约 ${(blob.size / 1024).toFixed(0)}KB)`;
+    linkEl.download = `spelling_session_${sessionHash.slice(0, 10)}.mp3`;
+    statusEl.textContent = `整段发音已生成 (约 ${(blob.size / 1024).toFixed(0)}KB)，也已存入下方语音缓存库`;
     linkEl.style.display = 'inline-block';
+
+    await dbPut({
+      key: sessionHash,
+      text: `🎬 整段发音：${label}`,
+      voiceName: 'session',
+      rate: '-',
+      size: blob.size,
+      createdAt: Date.now(),
+      blob,
+      type: 'session'
+    }).catch(() => {});
+    renderCacheList();
   } catch (err) {
     console.warn('Failed to build session mp3:', err);
     statusEl.textContent = '整段发音合成失败（不影响播放）';
@@ -694,6 +720,11 @@ async function playSelectedGoogle(selIdx, rate, letterGap, wordGap, repeat, apiK
   let wordCount = 0;
   let i = 0;
 
+  // Kick off mp3 synthesis in parallel with playback (all clip URLs are already known
+  // at this point), instead of waiting for playback to finish first. This makes the
+  // download link appear right after playback ends instead of noticeably later.
+  const mp3Promise = buildSessionMp3(steps, runId);
+
   await new Promise((resolve) => {
     activeResolvers.push(resolve);
     function playNext() {
@@ -720,9 +751,7 @@ async function playSelectedGoogle(selIdx, rate, letterGap, wordGap, repeat, apiK
     playNext();
   });
 
-  if (runId === currentRunId) {
-    buildSessionMp3(steps, runId);
-  }
+  await mp3Promise.catch(() => {});
 }
 
 async function playSelected() {
@@ -787,11 +816,13 @@ async function renderCacheList() {
 
     const label = document.createElement('span');
     label.className = 'cache-label';
-    label.textContent = item.text.replace(/\.$/, '');
+    label.textContent = item.type === 'session' ? item.text : item.text.replace(/\.$/, '');
 
     const sub = document.createElement('span');
     sub.className = 'cache-sub';
-    sub.textContent = `${item.voiceName} · ${(item.size / 1024).toFixed(0)}KB`;
+    sub.textContent = item.type === 'session'
+      ? `整段录音 · ${(item.size / 1024).toFixed(0)}KB · #${item.key.slice(0, 8)}`
+      : `${item.voiceName} · ${(item.size / 1024).toFixed(0)}KB · #${item.key.slice(0, 8)}`;
 
     const audio = document.createElement('audio');
     audio.className = 'cache-audio';
@@ -803,7 +834,9 @@ async function renderCacheList() {
     actions.className = 'cache-actions';
     const dl = document.createElement('a');
     dl.href = url;
-    dl.download = `${item.text.replace(/[^a-zA-Z]/g, '') || 'clip'}.mp3`;
+    dl.download = item.type === 'session'
+      ? `spelling_session_${item.key.slice(0, 10)}.mp3`
+      : `${item.text.replace(/[^a-zA-Z]/g, '') || 'clip'}_${item.key.slice(0, 8)}.mp3`;
     dl.textContent = '下载';
     const delBtn = document.createElement('button');
     delBtn.className = 'danger';
