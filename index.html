@@ -381,7 +381,11 @@ async function spellWord(word, rate, letterGap) {
   const letters = word.split('');
   for (let i = 0; i < letters.length; i++) {
     if (stopRequested) return;
-    await speak(letters[i].toUpperCase(), rate);
+    // Append a period after each letter: many system/browser TTS voices (e.g. Safari's
+    // "Daniel (en-GB)") treat a bare, isolated single character as ambiguous and prefix
+    // it with "Capital" regardless of actual case. Giving it sentence-like context
+    // (a trailing period) avoids that disambiguation behaviour and just speaks the letter.
+    await speak(letters[i].toLowerCase() + '.', rate);
     if (i < letters.length - 1) await wait(letterGap);
   }
 }
