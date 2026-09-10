@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>拼写练习工具 Spelling Trainer</title>
+<style>
+  :root {
+    --primary: #4f7cff;
+    --bg: #f5f7fb;
+    --card: #ffffff;
+    --border: #e0e4ee;
+    --text: #222;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 20px;
+  }
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  h1 {
+    font-size: 22px;
+    text-align: center;
+    margin-bottom: 4px;
+  }
+  .subtitle {
+    text-align: center;
+    color: #777;
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .add-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .add-row input[type=text] {
+    flex: 1;
+    min-width: 160px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 15px;
+  }
+  textarea {
+    width: 100%;
+    min-height: 70px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    margin-top: 8px;
+    resize: vertical;
+  }
+  button {
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: opacity .15s;
+  }
+  button:hover { opacity: 0.88; }
+  button.secondary {
+    background: #eef1f8;
+    color: #444;
+  }
+  button.danger {
+    background: #ff5c5c;
+  }
+  button:disabled {
+    background: #c9cfdc;
+    cursor: not-allowed;
+  }
+  .toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .toolbar .left { display: flex; gap: 8px; flex-wrap: wrap; }
+  ul#wordList {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 320px;
+    overflow-y: auto;
+  }
+  ul#wordList li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  ul#wordList li:last-child { border-bottom: none; }
+  .word-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .word-left input[type=checkbox] {
+    width: 18px;
+    height: 18px;
+  }
+  .word-text {
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  .row-actions button {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  .play-panel {
+    text-align: center;
+  }
+  .play-panel .main-btn {
+    font-size: 16px;
+    padding: 14px 28px;
+    border-radius: 10px;
+  }
+  .status {
+    margin-top: 14px;
+    font-size: 15px;
+    min-height: 24px;
+    color: #555;
+  }
+  .current-word {
+    font-size: 34px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    margin: 10px 0;
+    min-height: 44px;
+    color: var(--primary);
+  }
+  .phase-tag {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 20px;
+    background: #eef1f8;
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 6px;
+  }
+  select, input[type=number] {
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+  }
+  .settings-row {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    align-items: center;
+    font-size: 13px;
+    margin-top: 10px;
+    color: #555;
+  }
+  .settings-row label { display: flex; align-items: center; gap: 6px; }
+  .empty-hint {
+    color: #999;
+    font-size: 13px;
+    padding: 12px 4px;
+  }
+  footer {
+    text-align: center;
+    font-size: 12px;
+    color: #aaa;
+    margin-top: 24px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>拼写练习工具</h1>
+  <div class="subtitle">输入单词 → 勾选 → 播放「读音 - 拼读 - 读音」，帮助孩子练习拼写</div>
+
+  <div class="card">
+    <div class="add-row">
+      <input type="text" id="singleInput" placeholder="输入一个单词，回车添加">
+      <button id="addBtn">添加</button>
+    </div>
+    <textarea id="bulkInput" placeholder="或者一次粘贴多个单词，用逗号 / 空格 / 换行分隔，例如：&#10;apple, banana, orange"></textarea>
+    <div style="margin-top:8px; display:flex; gap:8px;">
+      <button id="bulkAddBtn" class="secondary">批量添加</button>
+      <button id="exportBtn" class="secondary">导出列表</button>
+      <button id="importBtn" class="secondary">导入列表</button>
+      <input type="file" id="importFile" accept=".json,.txt" style="display:none">
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="toolbar">
+      <div class="left">
+        <button id="selectAllBtn" class="secondary">全选</button>
+        <button id="clearSelBtn" class="secondary">取消选择</button>
+        <button id="deleteSelBtn" class="danger">删除已选</button>
+      </div>
+      <div id="countInfo" style="font-size:13px;color:#888;">共 0 个单词</div>
+    </div>
+    <ul id="wordList"></ul>
+    <div id="emptyHint" class="empty-hint">还没有单词，先在上面添加一些吧。</div>
+  </div>
+
+  <div class="card play-panel">
+    <div class="settings-row" style="justify-content:center;">
+      <label>朗读语音：
+        <select id="voiceSelect"></select>
+      </label>
+      <label>语速：
+        <input type="number" id="rateInput" value="0.85" min="0.3" max="1.5" step="0.05" style="width:70px;">
+      </label>
+      <label>字母间停顿(秒)：
+        <input type="number" id="letterGapInput" value="0.5" min="0" max="2" step="0.1" style="width:70px;">
+      </label>
+      <label>单词间停顿(秒)：
+        <input type="number" id="wordGapInput" value="1.5" min="0" max="5" step="0.5" style="width:70px;">
+      </label>
+      <label>重复次数：
+        <input type="number" id="repeatInput" value="1" min="1" max="5" step="1" style="width:60px;">
+      </label>
+    </div>
+    <div style="margin-top:14px;">
+      <button id="playBtn" class="main-btn">▶ 播放已选单词</button>
+      <button id="stopBtn" class="secondary" disabled>■ 停止</button>
+    </div>
+    <div class="phase-tag" id="phaseTag" style="display:none;"></div>
+    <div class="current-word" id="currentWordDisplay"></div>
+    <div class="status" id="statusText">选择单词后点击播放</div>
+  </div>
+
+  <footer>数据保存在本机浏览器（localStorage），换设备/浏览器需重新导入。</footer>
+</div>
+
+<script>
+const STORAGE_KEY = 'spelling_trainer_words_v1';
+let words = [];
+let selected = new Set();
+let synth = window.speechSynthesis;
+let voices = [];
+let playQueue = [];
+let isPlaying = false;
+let stopRequested = false;
+
+function loadWords() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    words = raw ? JSON.parse(raw) : [];
+  } catch (e) { words = []; }
+}
+function saveWords() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(words));
+}
+
+function normalizeWord(w) {
+  return w.trim().replace(/[^a-zA-Z'-]/g, '');
+}
+
+function addWord(raw) {
+  const w = normalizeWord(raw);
+  if (!w) return;
+  if (words.some(x => x.toLowerCase() === w.toLowerCase())) return;
+  words.push(w);
+}
+
+function renderList() {
+  const ul = document.getElementById('wordList');
+  const emptyHint = document.getElementById('emptyHint');
+  ul.innerHTML = '';
+  if (words.length === 0) {
+    emptyHint.style.display = 'block';
+  } else {
+    emptyHint.style.display = 'none';
+  }
+  words.forEach((w, idx) => {
+    const li = document.createElement('li');
+    const left = document.createElement('div');
+    left.className = 'word-left';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = selected.has(idx);
+    cb.addEventListener('change', () => {
+      if (cb.checked) selected.add(idx); else selected.delete(idx);
+      updateCountInfo();
+    });
+    const span = document.createElement('span');
+    span.className = 'word-text';
+    span.textContent = w;
+    left.appendChild(cb);
+    left.appendChild(span);
+
+    const actions = document.createElement('div');
+    actions.className = 'row-actions';
+    const delBtn = document.createElement('button');
+    delBtn.className = 'secondary';
+    delBtn.textContent = '删除';
+    delBtn.addEventListener('click', () => {
+      words.splice(idx, 1);
+      selected = new Set([...selected].filter(i => i !== idx).map(i => i > idx ? i - 1 : i));
+      saveWords();
+      renderList();
+    });
+    actions.appendChild(delBtn);
+
+    li.appendChild(left);
+    li.appendChild(actions);
+    ul.appendChild(li);
+  });
+  updateCountInfo();
+}
+
+function updateCountInfo() {
+  document.getElementById('countInfo').textContent = `共 ${words.length} 个单词，已选 ${selected.size} 个`;
+}
+
+function populateVoices() {
+  voices = synth.getVoices().filter(v => v.lang.toLowerCase().startsWith('en'));
+  const select = document.getElementById('voiceSelect');
+  select.innerHTML = '';
+  if (voices.length === 0) {
+    const opt = document.createElement('option');
+    opt.textContent = '默认语音（英文）';
+    select.appendChild(opt);
+    return;
+  }
+  voices.forEach((v, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = `${v.name} (${v.lang})`;
+    select.appendChild(opt);
+  });
+}
+
+function speak(text, rate) {
+  return new Promise((resolve) => {
+    if (stopRequested) { resolve(); return; }
+    const utter = new SpeechSynthesisUtterance(text);
+    const select = document.getElementById('voiceSelect');
+    const idx = select.value;
+    if (voices.length > 0 && voices[idx]) {
+      utter.voice = voices[idx];
+      utter.lang = voices[idx].lang;
+    } else {
+      utter.lang = 'en-US';
+    }
+    utter.rate = rate;
+    utter.onend = resolve;
+    utter.onerror = resolve;
+    synth.speak(utter);
+  });
+}
+
+function wait(seconds) {
+  return new Promise(resolve => {
+    if (stopRequested) { resolve(); return; }
+    setTimeout(resolve, seconds * 1000);
+  });
+}
+
+async function spellWord(word, rate, letterGap) {
+  const letters = word.split('');
+  for (let i = 0; i < letters.length; i++) {
+    if (stopRequested) return;
+    await speak(letters[i].toUpperCase(), rate);
+    if (i < letters.length - 1) await wait(letterGap);
+  }
+}
+
+function setPhase(text) {
+  const tag = document.getElementById('phaseTag');
+  if (!text) { tag.style.display = 'none'; return; }
+  tag.style.display = 'inline-block';
+  tag.textContent = text;
+}
+
+async function playSelected() {
+  if (isPlaying) return;
+  const selIdx = [...selected].sort((a,b) => a-b);
+  if (selIdx.length === 0) {
+    document.getElementById('statusText').textContent = '请先勾选要播放的单词';
+    return;
+  }
+  isPlaying = true;
+  stopRequested = false;
+  document.getElementById('playBtn').disabled = true;
+  document.getElementById('stopBtn').disabled = false;
+
+  const rate = parseFloat(document.getElementById('rateInput').value) || 0.85;
+  const letterGap = parseFloat(document.getElementById('letterGapInput').value) || 0.5;
+  const wordGap = parseFloat(document.getElementById('wordGapInput').value) || 1.5;
+  const repeat = parseInt(document.getElementById('repeatInput').value) || 1;
+
+  const total = selIdx.length * repeat;
+  let count = 0;
+
+  for (let r = 0; r < repeat; r++) {
+    for (const idx of selIdx) {
+      if (stopRequested) break;
+      const word = words[idx];
+      count++;
+      document.getElementById('currentWordDisplay').textContent = word;
+      document.getElementById('statusText').textContent = `进度 ${count}/${total}`;
+
+      setPhase('① 读音');
+      await speak(word, rate);
+      if (stopRequested) break;
+      await wait(0.4);
+
+      setPhase('② 拼读字母');
+      await spellWord(word, rate, letterGap);
+      if (stopRequested) break;
+      await wait(0.4);
+
+      setPhase('③ 读音');
+      await speak(word, rate);
+      if (stopRequested) break;
+
+      await wait(wordGap);
+    }
+    if (stopRequested) break;
+  }
+
+  setPhase('');
+  document.getElementById('currentWordDisplay').textContent = '';
+  document.getElementById('statusText').textContent = stopRequested ? '已停止' : '播放完成 ✅';
+  isPlaying = false;
+  stopRequested = false;
+  document.getElementById('playBtn').disabled = false;
+  document.getElementById('stopBtn').disabled = true;
+}
+
+function stopPlayback() {
+  stopRequested = true;
+  synth.cancel();
+}
+
+document.getElementById('addBtn').addEventListener('click', () => {
+  const input = document.getElementById('singleInput');
+  addWord(input.value);
+  input.value = '';
+  saveWords();
+  renderList();
+});
+document.getElementById('singleInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    document.getElementById('addBtn').click();
+  }
+});
+document.getElementById('bulkAddBtn').addEventListener('click', () => {
+  const text = document.getElementById('bulkInput').value;
+  const parts = text.split(/[\s,，、\n]+/).filter(Boolean);
+  parts.forEach(p => addWord(p));
+  document.getElementById('bulkInput').value = '';
+  saveWords();
+  renderList();
+});
+document.getElementById('selectAllBtn').addEventListener('click', () => {
+  words.forEach((_, idx) => selected.add(idx));
+  renderList();
+});
+document.getElementById('clearSelBtn').addEventListener('click', () => {
+  selected.clear();
+  renderList();
+});
+document.getElementById('deleteSelBtn').addEventListener('click', () => {
+  words = words.filter((_, idx) => !selected.has(idx));
+  selected.clear();
+  saveWords();
+  renderList();
+});
+document.getElementById('playBtn').addEventListener('click', playSelected);
+document.getElementById('stopBtn').addEventListener('click', stopPlayback);
+
+document.getElementById('exportBtn').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify(words, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'word_list.json';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+document.getElementById('importBtn').addEventListener('click', () => {
+  document.getElementById('importFile').click();
+});
+document.getElementById('importFile').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const arr = JSON.parse(reader.result);
+      if (Array.isArray(arr)) {
+        arr.forEach(w => addWord(String(w)));
+        saveWords();
+        renderList();
+      }
+    } catch (err) {
+      const parts = reader.result.split(/[\s,，、\n]+/).filter(Boolean);
+      parts.forEach(p => addWord(p));
+      saveWords();
+      renderList();
+    }
+  };
+  reader.readAsText(file);
+});
+
+if (synth.onvoiceschanged !== undefined) {
+  synth.onvoiceschanged = populateVoices;
+}
+populateVoices();
+loadWords();
+renderList();
+</script>
+</body>
+</html>
