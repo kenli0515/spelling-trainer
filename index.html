@@ -72,6 +72,21 @@
   .empty-hint { color: #999; font-size: 13px; padding: 12px 4px; }
   .tts-note { font-size: 12px; color: #888; margin-top: 8px; text-align: left; line-height: 1.6; }
   footer { text-align: center; font-size: 12px; color: #aaa; margin-top: 24px; }
+
+  .cache-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px; }
+  .cache-info { font-size: 12px; color: #888; }
+  ul#cacheList { list-style: none; margin: 0; padding: 0; max-height: 360px; overflow-y: auto; }
+  ul#cacheList li {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: 10px 8px; border-bottom: 1px solid var(--border);
+  }
+  ul#cacheList li:last-child { border-bottom: none; }
+  .cache-label { font-size: 14px; font-weight: 600; min-width: 70px; }
+  .cache-sub { font-size: 11px; color: #999; }
+  .cache-audio { flex: 1; min-width: 180px; height: 32px; }
+  .cache-actions { display: flex; gap: 6px; }
+  .cache-actions a, .cache-actions button { padding: 5px 10px; font-size: 12px; text-decoration: none; border-radius: 6px; }
+  .cache-actions a { background: #eef1f8; color: #444; }
 </style>
 </head>
 <body>
@@ -119,7 +134,7 @@
       </label>
     </div>
     <div class="tts-note">
-      API Key 只保存在你当前浏览器的 localStorage，只会直接发给 Google 官方接口，不经过任何第三方服务器。使用前需要在 Google Cloud 控制台开通 "Cloud Text-to-Speech API" 并启用结算（每月有免费额度）。开启此选项后，播放会使用真实 mp3 音频文件，支持锁屏/切后台继续播放；不开启则使用免费的系统语音，但息屏后会暂停。
+      API Key 只保存在你当前浏览器的 localStorage，只会直接发给 Google 官方接口，不经过任何第三方服务器。使用前需要在 Google Cloud 控制台开通 "Cloud Text-to-Speech API"（注意不是 Speech-to-Text）并启用结算（每月有免费额度）。生成过的语音片段会缓存在浏览器本地（见下方"语音缓存库"），同一个单词/字母不会重复付费请求。
     </div>
   </div>
 
@@ -149,9 +164,25 @@
     <div class="current-word" id="currentWordDisplay"></div>
     <div class="status" id="statusText">选择单词后点击播放</div>
     <audio id="ttsPlayer" playsinline style="display:none;"></audio>
+    <div class="tts-note" id="gapNote">
+      提示：系统语音的字母间隔受语音引擎自身启动延迟影响，实际间隔可能比设置值略长；Google WaveNet 模式下间隔是精确拼接的静音音频，会更准确。
+    </div>
   </div>
 
-  <footer>数据保存在本机浏览器（localStorage），换设备/浏览器需重新导入。</footer>
+  <div class="card">
+    <div class="cache-toolbar">
+      <div>🎵 语音缓存库</div>
+      <div class="cache-info" id="cacheInfo">共 0 个片段</div>
+    </div>
+    <div class="cache-toolbar" style="margin-top:0;">
+      <button id="clearCacheBtn" class="danger">清空全部缓存</button>
+      <div class="cache-info">每个片段自带播放条，可暂停/拖动进度，也可下载 mp3</div>
+    </div>
+    <ul id="cacheList"></ul>
+    <div id="cacheEmptyHint" class="empty-hint">还没有缓存的语音片段，播放一次 Google WaveNet 语音后会自动出现在这里。</div>
+  </div>
+
+  <footer>数据保存在本机浏览器（localStorage / IndexedDB），换设备/浏览器需重新导入或重新生成语音。</footer>
 </div>
 
 <script>
@@ -159,6 +190,8 @@ const STORAGE_KEY = 'spelling_trainer_words_v1';
 const SELECTED_KEY = 'spelling_trainer_selected_v1';
 const SETTINGS_KEY = 'spelling_trainer_settings_v1';
 const DEFAULT_GOOGLE_VOICE = 'en-US-Wavenet-F';
+const DB_NAME = 'spelling_trainer_db';
+const DB_STORE = 'ttsCache';
 
 let words = [];
 let selected = new Set();
@@ -166,11 +199,79 @@ let synth = window.speechSynthesis;
 let voices = [];
 let isPlaying = false;
 let stopRequested = false;
-let currentAudio = null;
+let currentRunId = 0;
 
-const ttsCache = new Map();
+const ttsUrlCache = new Map();   // in-memory: cacheKey -> blob URL (this session only)
 const silenceCache = new Map();
 let unlockSrc = null;
+let dbPromise = null;
+let activeResolvers = [];
+
+function openDB() {
+  if (dbPromise) return dbPromise;
+  dbPromise = new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(DB_STORE)) {
+        db.createObjectStore(DB_STORE, { keyPath: 'key' });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+  return dbPromise;
+}
+
+async function dbPut(record) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(DB_STORE, 'readwrite');
+    tx.objectStore(DB_STORE).put(record);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function dbGet(key) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(DB_STORE, 'readonly');
+    const req = tx.objectStore(DB_STORE).get(key);
+    req.onsuccess = () => resolve(req.result || null);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function dbGetAll() {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(DB_STORE, 'readonly');
+    const req = tx.objectStore(DB_STORE).getAll();
+    req.onsuccess = () => resolve(req.result || []);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function dbDelete(key) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(DB_STORE, 'readwrite');
+    tx.objectStore(DB_STORE).delete(key);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function dbClear() {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(DB_STORE, 'readwrite');
+    tx.objectStore(DB_STORE).clear();
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
 
 function loadWords() {
   try {
@@ -349,7 +450,15 @@ function extractLangCode(voiceName) {
 
 async function fetchGoogleTTSUrl(text, apiKey, voiceName, rate) {
   const cacheKey = `${voiceName}|${rate}|${text}`;
-  if (ttsCache.has(cacheKey)) return ttsCache.get(cacheKey);
+  if (ttsUrlCache.has(cacheKey)) return ttsUrlCache.get(cacheKey);
+
+  const stored = await dbGet(cacheKey).catch(() => null);
+  if (stored && stored.blob) {
+    const url = URL.createObjectURL(stored.blob);
+    ttsUrlCache.set(cacheKey, url);
+    return url;
+  }
+
   const resp = await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${encodeURIComponent(apiKey)}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -369,7 +478,11 @@ async function fetchGoogleTTSUrl(text, apiKey, voiceName, rate) {
   for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
   const blob = new Blob([new Uint8Array(byteNumbers)], { type: 'audio/mp3' });
   const url = URL.createObjectURL(blob);
-  ttsCache.set(cacheKey, url);
+  ttsUrlCache.set(cacheKey, url);
+
+  await dbPut({ key: cacheKey, text, voiceName, rate, size: blob.size, createdAt: Date.now(), blob }).catch(() => {});
+  renderCacheList();
+
   return url;
 }
 
@@ -386,17 +499,30 @@ function updateMediaSession(title) {
   }
 }
 
+function resetPlaybackUI(statusMessage) {
+  setPhase('');
+  document.getElementById('currentWordDisplay').textContent = '';
+  document.getElementById('statusText').textContent = statusMessage;
+  isPlaying = false;
+  document.getElementById('playBtn').disabled = false;
+  document.getElementById('stopBtn').disabled = true;
+}
+
 function stopPlayback() {
   stopRequested = true;
+  currentRunId++; // invalidate any in-flight playback run
   synth.cancel();
   const player = document.getElementById('ttsPlayer');
   player.onended = null;
   player.pause();
-  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+  // Force-resolve any pending chained-audio promise so it doesn't hang.
+  activeResolvers.forEach(r => { try { r(); } catch (e) {} });
+  activeResolvers = [];
+  resetPlaybackUI('已停止');
 }
 
 // ---- Legacy sequential playback using system speechSynthesis (no reliable background support) ----
-async function playSelectedSystem(selIdx, rate, letterGap, wordGap, repeat) {
+async function playSelectedSystem(selIdx, rate, letterGap, wordGap, repeat, runId) {
   const total = selIdx.length * repeat;
   let count = 0;
   async function speak(text) { return speakSystem(text, rate); }
@@ -404,30 +530,29 @@ async function playSelectedSystem(selIdx, rate, letterGap, wordGap, repeat) {
   async function spellWord(word) {
     const letters = word.split('');
     for (let i = 0; i < letters.length; i++) {
-      if (stopRequested) return;
+      if (stopRequested || runId !== currentRunId) return;
       await speak(letters[i].toLowerCase() + '.');
       if (i < letters.length - 1) await wait(letterGap);
     }
   }
   for (let r = 0; r < repeat; r++) {
     for (const idx of selIdx) {
-      if (stopRequested) break;
+      if (stopRequested || runId !== currentRunId) return;
       const word = words[idx];
       count++;
       document.getElementById('currentWordDisplay').textContent = word;
       document.getElementById('statusText').textContent = `进度 ${count}/${total}`;
       updateMediaSession(word);
-      setPhase('① 读音'); await speak(word); if (stopRequested) break; await wait(0.4);
-      setPhase('② 拼读字母'); await spellWord(word); if (stopRequested) break; await wait(0.4);
-      setPhase('③ 读音'); await speak(word); if (stopRequested) break;
+      setPhase('① 读音'); await speak(word); if (stopRequested || runId !== currentRunId) return; await wait(0.4);
+      setPhase('② 拼读字母'); await spellWord(word); if (stopRequested || runId !== currentRunId) return; await wait(0.4);
+      setPhase('③ 读音'); await speak(word); if (stopRequested || runId !== currentRunId) return;
       await wait(wordGap);
     }
-    if (stopRequested) break;
   }
 }
 
 // ---- Google WaveNet playback: builds a queue of real audio clips chained through ONE <audio> element ----
-async function playSelectedGoogle(selIdx, rate, letterGap, wordGap, repeat, apiKey, voiceName) {
+async function playSelectedGoogle(selIdx, rate, letterGap, wordGap, repeat, apiKey, voiceName, runId) {
   const player = document.getElementById('ttsPlayer');
   const steps = [];
   for (let r = 0; r < repeat; r++) {
@@ -446,9 +571,9 @@ async function playSelectedGoogle(selIdx, rate, letterGap, wordGap, repeat, apiK
     }
   }
 
-  document.getElementById('statusText').textContent = '正在准备语音（首次播放需要联网请求）…';
+  document.getElementById('statusText').textContent = '正在准备语音（未缓存的片段需要联网请求）…';
   for (const step of steps) {
-    if (stopRequested) return;
+    if (stopRequested || runId !== currentRunId) return;
     if (step.kind === 'gap') {
       step.url = makeSilenceBlobUrl(step.dur);
     } else {
@@ -457,18 +582,20 @@ async function playSelectedGoogle(selIdx, rate, letterGap, wordGap, repeat, apiK
       } catch (err) {
         console.warn('Google TTS failed, falling back to system voice for this run:', err);
         document.getElementById('statusText').textContent = 'Google 请求失败，已自动切换回系统语音';
-        return playSelectedSystem(selIdx, rate, letterGap, wordGap, repeat);
+        return playSelectedSystem(selIdx, rate, letterGap, wordGap, repeat, runId);
       }
     }
   }
+  if (stopRequested || runId !== currentRunId) return;
 
   const total = selIdx.length * repeat;
   let wordCount = 0;
   let i = 0;
 
   await new Promise((resolve) => {
+    activeResolvers.push(resolve);
     function playNext() {
-      if (stopRequested || i >= steps.length) { resolve(); return; }
+      if (stopRequested || runId !== currentRunId || i >= steps.length) { resolve(); return; }
       const step = steps[i];
       if (step.kind === 'word') {
         document.getElementById('currentWordDisplay').textContent = step.word;
@@ -501,6 +628,8 @@ async function playSelected() {
   }
   isPlaying = true;
   stopRequested = false;
+  currentRunId++;
+  const runId = currentRunId;
   document.getElementById('playBtn').disabled = true;
   document.getElementById('stopBtn').disabled = false;
 
@@ -513,24 +642,88 @@ async function playSelected() {
   const voiceName = document.getElementById('googleVoiceName').value.trim() || DEFAULT_GOOGLE_VOICE;
 
   if (useGoogle && apiKey) {
-    // Unlock iOS audio playback synchronously within this click's user-gesture context.
     const player = document.getElementById('ttsPlayer');
     if (!unlockSrc) unlockSrc = makeSilenceBlobUrl(0.05);
     player.src = unlockSrc;
     player.play().catch(() => {});
-    await playSelectedGoogle(selIdx, rate, letterGap, wordGap, repeat, apiKey, voiceName);
+    await playSelectedGoogle(selIdx, rate, letterGap, wordGap, repeat, apiKey, voiceName, runId);
   } else {
-    await playSelectedSystem(selIdx, rate, letterGap, wordGap, repeat);
+    await playSelectedSystem(selIdx, rate, letterGap, wordGap, repeat, runId);
   }
 
-  setPhase('');
-  document.getElementById('currentWordDisplay').textContent = '';
-  document.getElementById('statusText').textContent = stopRequested ? '已停止' : '播放完成 ✅';
-  isPlaying = false;
-  stopRequested = false;
-  document.getElementById('playBtn').disabled = false;
-  document.getElementById('stopBtn').disabled = true;
+  if (runId !== currentRunId) return; // a newer run (or stop) already handled the UI reset
+  resetPlaybackUI(stopRequested ? '已停止' : '播放完成 ✅');
 }
+
+// ---- Cache list UI ----
+const cacheBlobUrls = new Map();
+
+async function renderCacheList() {
+  const ul = document.getElementById('cacheList');
+  const emptyHint = document.getElementById('cacheEmptyHint');
+  const items = await dbGetAll().catch(() => []);
+  items.sort((a, b) => b.createdAt - a.createdAt);
+
+  cacheBlobUrls.forEach(url => URL.revokeObjectURL(url));
+  cacheBlobUrls.clear();
+
+  ul.innerHTML = '';
+  emptyHint.style.display = items.length === 0 ? 'block' : 'none';
+
+  let totalSize = 0;
+  items.forEach(item => {
+    totalSize += item.size || 0;
+    const url = URL.createObjectURL(item.blob);
+    cacheBlobUrls.set(item.key, url);
+
+    const li = document.createElement('li');
+
+    const label = document.createElement('span');
+    label.className = 'cache-label';
+    label.textContent = item.text.replace(/\.$/, '');
+
+    const sub = document.createElement('span');
+    sub.className = 'cache-sub';
+    sub.textContent = `${item.voiceName} · ${(item.size / 1024).toFixed(0)}KB`;
+
+    const audio = document.createElement('audio');
+    audio.className = 'cache-audio';
+    audio.controls = true;
+    audio.src = url;
+    audio.preload = 'none';
+
+    const actions = document.createElement('div');
+    actions.className = 'cache-actions';
+    const dl = document.createElement('a');
+    dl.href = url;
+    dl.download = `${item.text.replace(/[^a-zA-Z]/g, '') || 'clip'}.mp3`;
+    dl.textContent = '下载';
+    const delBtn = document.createElement('button');
+    delBtn.className = 'danger';
+    delBtn.textContent = '删除';
+    delBtn.addEventListener('click', async () => {
+      await dbDelete(item.key);
+      ttsUrlCache.delete(item.key);
+      renderCacheList();
+    });
+    actions.appendChild(dl);
+    actions.appendChild(delBtn);
+
+    li.appendChild(label);
+    li.appendChild(sub);
+    li.appendChild(audio);
+    li.appendChild(actions);
+    ul.appendChild(li);
+  });
+
+  document.getElementById('cacheInfo').textContent = `共 ${items.length} 个片段，约 ${(totalSize / 1024 / 1024).toFixed(2)}MB`;
+}
+
+document.getElementById('clearCacheBtn').addEventListener('click', async () => {
+  await dbClear();
+  ttsUrlCache.clear();
+  renderCacheList();
+});
 
 document.getElementById('addBtn').addEventListener('click', () => {
   const input = document.getElementById('singleInput');
@@ -630,6 +823,7 @@ populateVoices();
 loadWords();
 loadSelected();
 renderList();
+renderCacheList();
 </script>
 </body>
 </html>
