@@ -12,6 +12,14 @@
     --card: #ffffff;
     --border: #e0e4ee;
     --text: #222;
+    --muted: #888;
+  }
+  body.dark {
+    --bg: #14161a;
+    --card: #1e2126;
+    --border: #2c3038;
+    --text: #eaeaea;
+    --muted: #9aa0a8;
   }
   * { box-sizing: border-box; }
   body {
@@ -20,16 +28,21 @@
     background: var(--bg);
     color: var(--text);
     padding: 20px;
+    transition: background .2s, color .2s;
   }
   .container { max-width: 720px; margin: 0 auto; }
   .top-row { display: flex; align-items: center; justify-content: center; position: relative; margin-bottom: 4px; }
   h1 { font-size: 22px; text-align: center; margin: 0; }
-  .settings-btn {
+  .top-actions {
     position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+    display: flex; gap: 8px;
+  }
+  .settings-btn {
     background: #eef1f8; color: #444; border: none; border-radius: 8px;
     padding: 8px 14px; font-size: 13px; cursor: pointer;
   }
-  .subtitle { text-align: center; color: #777; font-size: 13px; margin-bottom: 20px; }
+  body.dark .settings-btn { background: #2a2e35; color: #ddd; }
+  .subtitle { text-align: center; color: var(--muted); font-size: 13px; margin-bottom: 20px; }
   .card {
     background: var(--card);
     border: 1px solid var(--border);
@@ -42,11 +55,13 @@
   .add-row input[type=text] {
     flex: 1; min-width: 160px; padding: 10px 12px;
     border: 1px solid var(--border); border-radius: 8px; font-size: 15px;
+    background: var(--card); color: var(--text);
   }
   textarea {
     width: 100%; min-height: 70px; padding: 10px 12px;
     border: 1px solid var(--border); border-radius: 8px; font-size: 14px;
     margin-top: 8px; resize: vertical;
+    background: var(--card); color: var(--text);
   }
   button {
     background: var(--primary); color: #fff; border: none;
@@ -55,6 +70,7 @@
   }
   button:hover { opacity: 0.88; }
   button.secondary { background: #eef1f8; color: #444; }
+  body.dark button.secondary { background: #2a2e35; color: #ddd; }
   button.danger { background: #ff5c5c; }
   button:disabled { background: #c9cfdc; cursor: not-allowed; }
   .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px; }
@@ -68,9 +84,9 @@
   .row-actions button { padding: 6px 10px; font-size: 12px; }
   .play-panel { text-align: center; }
   .play-panel .main-btn { font-size: 16px; padding: 14px 28px; border-radius: 10px; }
-  .status { margin-top: 14px; font-size: 15px; min-height: 24px; color: #555; }
-  .empty-hint { color: #999; font-size: 13px; padding: 12px 4px; }
-  footer { text-align: center; font-size: 12px; color: #aaa; margin-top: 24px; }
+  .status { margin-top: 14px; font-size: 15px; min-height: 24px; color: var(--muted); }
+  .empty-hint { color: var(--muted); font-size: 13px; padding: 12px 4px; }
+  footer { text-align: center; font-size: 12px; color: var(--muted); margin-top: 24px; }
 
   .result-player { display: none; margin-top: 16px; }
   .result-player audio { width: 100%; }
@@ -81,7 +97,7 @@
   }
 
   .cache-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px; }
-  .cache-info { font-size: 12px; color: #888; }
+  .cache-info { font-size: 12px; color: var(--muted); }
   ul#cacheList { list-style: none; margin: 0; padding: 0; max-height: 360px; overflow-y: auto; }
   ul#cacheList li {
     display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
@@ -89,11 +105,12 @@
   }
   ul#cacheList li:last-child { border-bottom: none; }
   .cache-label { font-size: 14px; font-weight: 600; min-width: 90px; }
-  .cache-sub { font-size: 11px; color: #999; }
+  .cache-sub { font-size: 11px; color: var(--muted); }
   .cache-audio { flex: 1; min-width: 180px; height: 32px; }
   .cache-actions { display: flex; gap: 6px; }
   .cache-actions a, .cache-actions button { padding: 5px 10px; font-size: 12px; text-decoration: none; border-radius: 6px; }
   .cache-actions a { background: #eef1f8; color: #444; }
+  body.dark .cache-actions a { background: #2a2e35; color: #ddd; }
 
   .modal-overlay {
     display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4);
@@ -101,19 +118,27 @@
   }
   .modal-overlay.open { display: flex; }
   .modal-box {
-    background: #fff; border-radius: 14px; padding: 20px; width: 100%; max-width: 460px;
+    background: var(--card); color: var(--text); border-radius: 14px; padding: 20px; width: 100%; max-width: 460px;
     max-height: 90vh; overflow-y: auto;
   }
   .modal-box h2 { margin-top: 0; font-size: 17px; }
-  .modal-box h3 { font-size: 14px; margin: 18px 0 8px 0; color: #444; }
+  .modal-box h3 { font-size: 14px; margin: 18px 0 8px 0; color: var(--muted); }
   .modal-row { margin-bottom: 14px; }
-  .modal-row label { display: block; font-size: 13px; color: #555; margin-bottom: 6px; }
+  .modal-row label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
   .modal-row input[type=password], .modal-row input[type=text], .modal-row input[type=number] {
     width: 100%; padding: 9px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px;
+    background: var(--bg); color: var(--text);
   }
   .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .modal-note { font-size: 12px; color: #888; line-height: 1.6; margin-bottom: 14px; }
-  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+  .modal-note { font-size: 12px; color: var(--muted); line-height: 1.6; margin-bottom: 14px; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+  .switch-row { display: flex; align-items: center; justify-content: space-between; font-size: 14px; margin-bottom: 14px; }
+  .switch { position: relative; display: inline-block; width: 42px; height: 24px; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider { position: absolute; cursor: pointer; inset: 0; background-color: #ccc; transition: .2s; border-radius: 24px; }
+  .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .2s; border-radius: 50%; }
+  input:checked + .slider { background-color: var(--primary); }
+  input:checked + .slider:before { transform: translateX(18px); }
 
   ul#clipCacheList { list-style: none; margin: 0; padding: 0; max-height: 220px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; }
   ul#clipCacheList li {
@@ -122,7 +147,7 @@
   }
   ul#clipCacheList li:last-child { border-bottom: none; }
   .clip-text { font-weight: 600; }
-  .clip-sub { font-size: 11px; color: #999; }
+  .clip-sub { font-size: 11px; color: var(--muted); }
   .clip-del { padding: 4px 8px; font-size: 11px; }
 </style>
 </head>
@@ -130,7 +155,10 @@
 <div class="container">
   <div class="top-row">
     <h1>拼写练习工具</h1>
-    <button class="settings-btn" id="openSettingsBtn">⚙ 设置</button>
+    <div class="top-actions">
+      <button class="settings-btn" id="refreshBtn" title="刷新页面">🔄</button>
+      <button class="settings-btn" id="openSettingsBtn">⚙ 设置</button>
+    </div>
   </div>
   <div class="subtitle">输入单词 → 勾选 → 生成「读音 - 拼读 - 读音」整段发音</div>
 
@@ -155,7 +183,7 @@
         <button id="clearSelBtn" class="secondary">取消选择</button>
         <button id="deleteSelBtn" class="danger">删除已选</button>
       </div>
-      <div id="countInfo" style="font-size:13px;color:#888;">共 0 个单词</div>
+      <div id="countInfo" style="font-size:13px;color:var(--muted);">共 0 个单词</div>
     </div>
     <ul id="wordList"></ul>
     <div id="emptyHint" class="empty-hint">还没有单词，先在上面添加一些吧。</div>
@@ -190,10 +218,19 @@
 <div class="modal-overlay" id="settingsOverlay">
   <div class="modal-box">
     <h2>⚙ 语音设置</h2>
+
+    <div class="switch-row">
+      <span>深色模式</span>
+      <label class="switch">
+        <input type="checkbox" id="darkModeToggle">
+        <span class="slider"></span>
+      </label>
+    </div>
+
     <div class="modal-note">
       使用 Google WaveNet 高质量语音生成读音。需要在 Google Cloud 控制台开通 "Cloud Text-to-Speech API"（不是 Speech-to-Text）并启用结算（有免费额度）。API Key 只保存在你当前浏览器的 localStorage，只会直接发给 Google 官方接口。
     </div>
-    <div class="modal-note" id="apiUsageInfo" style="background:#f5f7fb;padding:8px 10px;border-radius:8px;">
+    <div class="modal-note" id="apiUsageInfo" style="background:var(--bg);padding:8px 10px;border-radius:8px;">
       累计已请求字符数：0
     </div>
     <div class="modal-row">
@@ -226,9 +263,10 @@
     <h3>单个语音片段缓存（用于复用，避免重复付费请求）</h3>
     <div class="cache-info" id="clipCacheInfo" style="margin-bottom:6px;">共 0 个片段</div>
     <ul id="clipCacheList"></ul>
-    <div id="clipCacheEmptyHint" style="font-size:12px;color:#999;margin-top:6px;">暂无缓存片段</div>
+    <div id="clipCacheEmptyHint" style="font-size:12px;color:var(--muted);margin-top:6px;">暂无缓存片段</div>
     <div class="modal-actions" style="justify-content:flex-start; margin-top:8px;">
       <button class="danger" id="clearClipCacheBtn">清空片段缓存</button>
+      <button class="danger" id="clearAllCacheBtn">清空全部缓存（含整段录音）</button>
     </div>
 
     <div class="modal-actions">
@@ -241,6 +279,7 @@
 const STORAGE_KEY = 'spelling_trainer_words_v1';
 const SELECTED_KEY = 'spelling_trainer_selected_v1';
 const SETTINGS_KEY = 'spelling_trainer_settings_v1';
+const DARK_MODE_KEY = 'spelling_trainer_dark_mode_v1';
 const DEFAULT_GOOGLE_VOICE = 'en-US-Wavenet-F';
 const DB_NAME = 'spelling_trainer_db';
 const DB_STORE = 'ttsCache';
@@ -257,9 +296,31 @@ let dbPromise = null;
 let resultObjectUrl = null;
 let requestedCharsThisRun = 0;
 
+// ---- Dark mode ----
+function applyDarkMode(enabled) {
+  document.body.classList.toggle('dark', enabled);
+}
+function initDarkMode() {
+  const enabled = localStorage.getItem(DARK_MODE_KEY) === '1';
+  document.getElementById('darkModeToggle').checked = enabled;
+  applyDarkMode(enabled);
+}
+document.getElementById('darkModeToggle').addEventListener('change', (e) => {
+  localStorage.setItem(DARK_MODE_KEY, e.target.checked ? '1' : '0');
+  applyDarkMode(e.target.checked);
+});
+
+document.getElementById('refreshBtn').addEventListener('click', () => {
+  location.reload();
+});
+
 // ---- Hashing (SHA-256, hex) ----
+// Hash inputs are lower-cased so "Hi", "HI" and "hi" all map to the same cache
+// entry/hash, regardless of how the user originally typed the word. The actual
+// text sent to the TTS API keeps its original casing (case doesn't change
+// pronunciation), only the hash key is normalized.
 async function hashString(str) {
-  const enc = new TextEncoder().encode(str);
+  const enc = new TextEncoder().encode(str.toLowerCase());
   const digest = await crypto.subtle.digest('SHA-256', enc);
   return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
@@ -783,6 +844,16 @@ document.getElementById('clearClipCacheBtn').addEventListener('click', async () 
   renderClipCacheList();
 });
 
+document.getElementById('clearAllCacheBtn').addEventListener('click', async () => {
+  const all = await dbGetAll().catch(() => []);
+  for (const item of all) {
+    await dbDelete(item.key);
+  }
+  ttsUrlCache.clear();
+  renderClipCacheList();
+  renderCacheList();
+});
+
 document.getElementById('addBtn').addEventListener('click', () => {
   const input = document.getElementById('singleInput');
   addWord(input.value);
@@ -856,6 +927,7 @@ document.getElementById('importFile').addEventListener('change', (e) => {
 });
 
 applySavedSettings();
+initDarkMode();
 loadWords();
 loadSelected();
 renderList();
