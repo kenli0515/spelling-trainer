@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>拼写练习工具 Spelling Trainer</title>
+<script src="https://cdn.jsdelivr.net/npm/lamejs@1.2.0/lame.min.js"></script>
 <style>
   :root {
     --primary: #4f7cff;
@@ -87,6 +88,27 @@
   .cache-actions { display: flex; gap: 6px; }
   .cache-actions a, .cache-actions button { padding: 5px 10px; font-size: 12px; text-decoration: none; border-radius: 6px; }
   .cache-actions a { background: #eef1f8; color: #444; }
+
+  .session-download {
+    display: none;
+    margin-top: 12px;
+    padding: 10px;
+    background: #eef7ee;
+    border: 1px solid #cdeacd;
+    border-radius: 8px;
+    font-size: 13px;
+    text-align: center;
+  }
+  .session-download a {
+    display: inline-block;
+    margin-top: 6px;
+    background: #34a853;
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 13px;
+  }
 </style>
 </head>
 <body>
@@ -134,7 +156,7 @@
       </label>
     </div>
     <div class="tts-note">
-      API Key 只保存在你当前浏览器的 localStorage，只会直接发给 Google 官方接口，不经过任何第三方服务器。使用前需要在 Google Cloud 控制台开通 "Cloud Text-to-Speech API"（注意不是 Speech-to-Text）并启用结算（每月有免费额度）。生成过的语音片段会缓存在浏览器本地（见下方"语音缓存库"），同一个单词/字母不会重复付费请求。
+      API Key 只保存在你当前浏览器的 localStorage，只会直接发给 Google 官方接口，不经过任何第三方服务器。使用前需要在 Google Cloud 控制台开通 "Cloud Text-to-Speech API"（注意不是 Speech-to-Text）并启用结算（每月有免费额度）。生成过的语音片段会缓存在浏览器本地（见下方"语音缓存库"），同一个单词/字母不会重复付费请求。开启此模式后，每次播放完还会自动生成一份"整段发音"的 mp3 供下载。
     </div>
   </div>
 
@@ -164,8 +186,12 @@
     <div class="current-word" id="currentWordDisplay"></div>
     <div class="status" id="statusText">选择单词后点击播放</div>
     <audio id="ttsPlayer" playsinline style="display:none;"></audio>
+    <div class="session-download" id="sessionDownload">
+      <div id="sessionDownloadStatus">整段发音准备中…</div>
+      <a id="sessionDownloadLink" style="display:none;">⬇ 下载本次整段发音 (MP3)</a>
+    </div>
     <div class="tts-note" id="gapNote">
-      提示：系统语音的字母间隔受语音引擎自身启动延迟影响，实际间隔可能比设置值略长；Google WaveNet 模式下间隔是精确拼接的静音音频，会更准确。
+      提示：系统语音的字母间隔受语音引擎自身启动延迟影响，实际间隔可能比设置值略长；Google WaveNet 模式下间隔是精确拼接的静音音频，会更准确。"整段发音下载"功能仅在 Google WaveNet 模式下可用，系统语音因浏览器限制无法导出录音。
     </div>
   </div>
 
@@ -206,6 +232,7 @@ const silenceCache = new Map();
 let unlockSrc = null;
 let dbPromise = null;
 let activeResolvers = [];
+let sessionDownloadUrl = null;
 
 function openDB() {
   if (dbPromise) return dbPromise;
@@ -508,6 +535,13 @@ function resetPlaybackUI(statusMessage) {
   document.getElementById('stopBtn').disabled = true;
 }
 
+function hideSessionDownload() {
+  const box = document.getElementById('sessionDownload');
+  box.style.display = 'none';
+  document.getElementById('sessionDownloadLink').style.display = 'none';
+  if (sessionDownloadUrl) { URL.revokeObjectURL(sessionDownloadUrl); sessionDownloadUrl = null; }
+}
+
 function stopPlayback() {
   stopRequested = true;
   currentRunId++; // invalidate any in-flight playback run
@@ -548,6 +582,74 @@ async function playSelectedSystem(selIdx, rate, letterGap, wordGap, repeat, runI
       setPhase('③ 读音'); await speak(word); if (stopRequested || runId !== currentRunId) return;
       await wait(wordGap);
     }
+  }
+}
+
+// ---- Combine all step audio into one downloadable MP3 (Google mode only) ----
+async function buildSessionMp3(steps, runId) {
+  const box = document.getElementById('sessionDownload');
+  const statusEl = document.getElementById('sessionDownloadStatus');
+  const linkEl = document.getElementById('sessionDownloadLink');
+  if (typeof lamejs === 'undefined') return;
+
+  hideSessionDownload();
+  box.style.display = 'block';
+  statusEl.textContent = '正在合成整段发音…';
+  linkEl.style.display = 'none';
+
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    const ctx = new AudioCtx();
+    const targetRate = ctx.sampleRate;
+    const chunks = [];
+
+    for (const step of steps) {
+      if (runId !== currentRunId) { ctx.close(); return; }
+      if (step.kind === 'gap') {
+        chunks.push(new Float32Array(Math.round(step.dur * targetRate)));
+      } else {
+        const arrayBuf = await (await fetch(step.url)).arrayBuffer();
+        const audioBuf = await ctx.decodeAudioData(arrayBuf.slice(0));
+        chunks.push(audioBuf.getChannelData(0).slice());
+      }
+    }
+    if (runId !== currentRunId) { ctx.close(); return; }
+
+    let total = 0;
+    chunks.forEach(c => total += c.length);
+    const combined = new Float32Array(total);
+    let offset = 0;
+    chunks.forEach(c => { combined.set(c, offset); offset += c.length; });
+
+    const int16 = new Int16Array(combined.length);
+    for (let i = 0; i < combined.length; i++) {
+      const s = Math.max(-1, Math.min(1, combined[i]));
+      int16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+    }
+
+    const encoder = new lamejs.Mp3Encoder(1, targetRate, 128);
+    const mp3Data = [];
+    const blockSize = 1152;
+    for (let i = 0; i < int16.length; i += blockSize) {
+      const chunk = int16.subarray(i, i + blockSize);
+      const enc = encoder.encodeBuffer(chunk);
+      if (enc.length > 0) mp3Data.push(enc);
+    }
+    const finalBuf = encoder.flush();
+    if (finalBuf.length > 0) mp3Data.push(finalBuf);
+
+    ctx.close();
+    if (runId !== currentRunId) return;
+
+    const blob = new Blob(mp3Data, { type: 'audio/mp3' });
+    sessionDownloadUrl = URL.createObjectURL(blob);
+    linkEl.href = sessionDownloadUrl;
+    linkEl.download = `spelling_session_${Date.now()}.mp3`;
+    statusEl.textContent = `整段发音已生成 (约 ${(blob.size / 1024).toFixed(0)}KB)`;
+    linkEl.style.display = 'inline-block';
+  } catch (err) {
+    console.warn('Failed to build session mp3:', err);
+    statusEl.textContent = '整段发音合成失败（不影响播放）';
   }
 }
 
@@ -617,6 +719,10 @@ async function playSelectedGoogle(selIdx, rate, letterGap, wordGap, repeat, apiK
     player.onended = playNext;
     playNext();
   });
+
+  if (runId === currentRunId) {
+    buildSessionMp3(steps, runId);
+  }
 }
 
 async function playSelected() {
@@ -632,6 +738,7 @@ async function playSelected() {
   const runId = currentRunId;
   document.getElementById('playBtn').disabled = true;
   document.getElementById('stopBtn').disabled = false;
+  hideSessionDownload();
 
   const rate = parseFloat(document.getElementById('rateInput').value) || 0.85;
   const letterGap = parseFloat(document.getElementById('letterGapInput').value) || 0.4;
