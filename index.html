@@ -231,7 +231,7 @@
         <input type="number" id="rateInput" value="0.85" min="0.3" max="1.5" step="0.05" style="width:70px;">
       </label>
       <label>字母间停顿(秒)：
-        <input type="number" id="letterGapInput" value="0.5" min="0" max="2" step="0.1" style="width:70px;">
+        <input type="number" id="letterGapInput" value="0.4" min="0" max="2" step="0.1" style="width:70px;">
       </label>
       <label>单词间停顿(秒)：
         <input type="number" id="wordGapInput" value="1.5" min="0" max="5" step="0.5" style="width:70px;">
@@ -254,6 +254,8 @@
 
 <script>
 const STORAGE_KEY = 'spelling_trainer_words_v1';
+const SELECTED_KEY = 'spelling_trainer_selected_v1';
+const SETTINGS_KEY = 'spelling_trainer_settings_v1';
 let words = [];
 let selected = new Set();
 let synth = window.speechSynthesis;
@@ -270,6 +272,38 @@ function loadWords() {
 }
 function saveWords() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(words));
+}
+
+function loadSelected() {
+  try {
+    const raw = localStorage.getItem(SELECTED_KEY);
+    const arr = raw ? JSON.parse(raw) : [];
+    selected = new Set(arr.filter(i => i >= 0 && i < words.length));
+  } catch (e) { selected = new Set(); }
+}
+function saveSelected() {
+  localStorage.setItem(SELECTED_KEY, JSON.stringify([...selected]));
+}
+
+function loadSettings() {
+  try {
+    const raw = localStorage.getItem(SETTINGS_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) { return {}; }
+}
+function saveSettings() {
+  const settings = {
+    voiceName: (() => {
+      const select = document.getElementById('voiceSelect');
+      const idx = select.value;
+      return (voices[idx] && voices[idx].name) || '';
+    })(),
+    rate: document.getElementById('rateInput').value,
+    letterGap: document.getElementById('letterGapInput').value,
+    wordGap: document.getElementById('wordGapInput').value,
+    repeat: document.getElementById('repeatInput').value
+  };
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 }
 
 function normalizeWord(w) {
@@ -301,6 +335,7 @@ function renderList() {
     cb.checked = selected.has(idx);
     cb.addEventListener('change', () => {
       if (cb.checked) selected.add(idx); else selected.delete(idx);
+      saveSelected();
       updateCountInfo();
     });
     const span = document.createElement('span');
@@ -318,6 +353,7 @@ function renderList() {
       words.splice(idx, 1);
       selected = new Set([...selected].filter(i => i !== idx).map(i => i > idx ? i - 1 : i));
       saveWords();
+      saveSelected();
       renderList();
     });
     actions.appendChild(delBtn);
@@ -349,6 +385,19 @@ function populateVoices() {
     opt.textContent = `${v.name} (${v.lang})`;
     select.appendChild(opt);
   });
+
+  const settings = loadSettings();
+  let preferredIdx = -1;
+  if (settings.voiceName) {
+    preferredIdx = voices.findIndex(v => v.name === settings.voiceName);
+  }
+  if (preferredIdx === -1) {
+    preferredIdx = voices.findIndex(v => v.name.toLowerCase().includes('samantha'));
+  }
+  if (preferredIdx !== -1) {
+    select.value = preferredIdx;
+  }
+  select.addEventListener('change', saveSettings);
 }
 
 function speak(text, rate) {
@@ -410,7 +459,7 @@ async function playSelected() {
   document.getElementById('stopBtn').disabled = false;
 
   const rate = parseFloat(document.getElementById('rateInput').value) || 0.85;
-  const letterGap = parseFloat(document.getElementById('letterGapInput').value) || 0.5;
+  const letterGap = parseFloat(document.getElementById('letterGapInput').value) || 0.4;
   const wordGap = parseFloat(document.getElementById('wordGapInput').value) || 1.5;
   const repeat = parseInt(document.getElementById('repeatInput').value) || 1;
 
@@ -480,16 +529,19 @@ document.getElementById('bulkAddBtn').addEventListener('click', () => {
 });
 document.getElementById('selectAllBtn').addEventListener('click', () => {
   words.forEach((_, idx) => selected.add(idx));
+  saveSelected();
   renderList();
 });
 document.getElementById('clearSelBtn').addEventListener('click', () => {
   selected.clear();
+  saveSelected();
   renderList();
 });
 document.getElementById('deleteSelBtn').addEventListener('click', () => {
   words = words.filter((_, idx) => !selected.has(idx));
   selected.clear();
   saveWords();
+  saveSelected();
   renderList();
 });
 document.getElementById('playBtn').addEventListener('click', playSelected);
@@ -529,11 +581,25 @@ document.getElementById('importFile').addEventListener('change', (e) => {
   reader.readAsText(file);
 });
 
+['rateInput','letterGapInput','wordGapInput','repeatInput'].forEach(id => {
+  document.getElementById(id).addEventListener('change', saveSettings);
+});
+
+function applySavedSettings() {
+  const settings = loadSettings();
+  if (settings.rate) document.getElementById('rateInput').value = settings.rate;
+  if (settings.letterGap) document.getElementById('letterGapInput').value = settings.letterGap;
+  if (settings.wordGap) document.getElementById('wordGapInput').value = settings.wordGap;
+  if (settings.repeat) document.getElementById('repeatInput').value = settings.repeat;
+}
+
 if (synth.onvoiceschanged !== undefined) {
   synth.onvoiceschanged = populateVoices;
 }
+applySavedSettings();
 populateVoices();
 loadWords();
+loadSelected();
 renderList();
 </script>
 </body>
