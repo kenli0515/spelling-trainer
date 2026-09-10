@@ -20,21 +20,9 @@
     color: var(--text);
     padding: 20px;
   }
-  .container {
-    max-width: 720px;
-    margin: 0 auto;
-  }
-  h1 {
-    font-size: 22px;
-    text-align: center;
-    margin-bottom: 4px;
-  }
-  .subtitle {
-    text-align: center;
-    color: #777;
-    font-size: 13px;
-    margin-bottom: 20px;
-  }
+  .container { max-width: 720px; margin: 0 auto; }
+  h1 { font-size: 22px; text-align: center; margin-bottom: 4px; }
+  .subtitle { text-align: center; color: #777; font-size: 13px; margin-bottom: 20px; }
   .card {
     background: var(--card);
     border: 1px solid var(--border);
@@ -43,151 +31,47 @@
     margin-bottom: 16px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
   }
-  .add-row {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
+  .add-row { display: flex; gap: 8px; flex-wrap: wrap; }
   .add-row input[type=text] {
-    flex: 1;
-    min-width: 160px;
-    padding: 10px 12px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 15px;
+    flex: 1; min-width: 160px; padding: 10px 12px;
+    border: 1px solid var(--border); border-radius: 8px; font-size: 15px;
   }
   textarea {
-    width: 100%;
-    min-height: 70px;
-    padding: 10px 12px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 14px;
-    margin-top: 8px;
-    resize: vertical;
+    width: 100%; min-height: 70px; padding: 10px 12px;
+    border: 1px solid var(--border); border-radius: 8px; font-size: 14px;
+    margin-top: 8px; resize: vertical;
   }
   button {
-    background: var(--primary);
-    color: #fff;
-    border: none;
-    padding: 10px 16px;
-    border-radius: 8px;
-    font-size: 14px;
-    cursor: pointer;
-    transition: opacity .15s;
+    background: var(--primary); color: #fff; border: none;
+    padding: 10px 16px; border-radius: 8px; font-size: 14px;
+    cursor: pointer; transition: opacity .15s;
   }
   button:hover { opacity: 0.88; }
-  button.secondary {
-    background: #eef1f8;
-    color: #444;
-  }
-  button.danger {
-    background: #ff5c5c;
-  }
-  button:disabled {
-    background: #c9cfdc;
-    cursor: not-allowed;
-  }
-  .toolbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
+  button.secondary { background: #eef1f8; color: #444; }
+  button.danger { background: #ff5c5c; }
+  button:disabled { background: #c9cfdc; cursor: not-allowed; }
+  .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px; }
   .toolbar .left { display: flex; gap: 8px; flex-wrap: wrap; }
-  ul#wordList {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    max-height: 320px;
-    overflow-y: auto;
-  }
-  ul#wordList li {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 8px;
-    border-bottom: 1px solid var(--border);
-  }
+  ul#wordList { list-style: none; margin: 0; padding: 0; max-height: 320px; overflow-y: auto; }
+  ul#wordList li { display: flex; align-items: center; justify-content: space-between; padding: 10px 8px; border-bottom: 1px solid var(--border); }
   ul#wordList li:last-child { border-bottom: none; }
-  .word-left {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  .word-left { display: flex; align-items: center; gap: 10px; }
+  .word-left input[type=checkbox] { width: 18px; height: 18px; }
+  .word-text { font-size: 17px; font-weight: 600; letter-spacing: 0.5px; }
+  .row-actions button { padding: 6px 10px; font-size: 12px; }
+  .play-panel { text-align: center; }
+  .play-panel .main-btn { font-size: 16px; padding: 14px 28px; border-radius: 10px; }
+  .status { margin-top: 14px; font-size: 15px; min-height: 24px; color: #555; }
+  .current-word { font-size: 34px; font-weight: 700; letter-spacing: 4px; margin: 10px 0; min-height: 44px; color: var(--primary); }
+  .phase-tag { display: inline-block; padding: 2px 10px; border-radius: 20px; background: #eef1f8; font-size: 12px; color: #666; margin-bottom: 6px; }
+  select, input[type=number], input[type=password], input[type=text].small {
+    padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px;
   }
-  .word-left input[type=checkbox] {
-    width: 18px;
-    height: 18px;
-  }
-  .word-text {
-    font-size: 17px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-  }
-  .row-actions button {
-    padding: 6px 10px;
-    font-size: 12px;
-  }
-  .play-panel {
-    text-align: center;
-  }
-  .play-panel .main-btn {
-    font-size: 16px;
-    padding: 14px 28px;
-    border-radius: 10px;
-  }
-  .status {
-    margin-top: 14px;
-    font-size: 15px;
-    min-height: 24px;
-    color: #555;
-  }
-  .current-word {
-    font-size: 34px;
-    font-weight: 700;
-    letter-spacing: 4px;
-    margin: 10px 0;
-    min-height: 44px;
-    color: var(--primary);
-  }
-  .phase-tag {
-    display: inline-block;
-    padding: 2px 10px;
-    border-radius: 20px;
-    background: #eef1f8;
-    font-size: 12px;
-    color: #666;
-    margin-bottom: 6px;
-  }
-  select, input[type=number] {
-    padding: 8px 10px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 13px;
-  }
-  .settings-row {
-    display: flex;
-    gap: 14px;
-    flex-wrap: wrap;
-    align-items: center;
-    font-size: 13px;
-    margin-top: 10px;
-    color: #555;
-  }
+  .settings-row { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; font-size: 13px; margin-top: 10px; color: #555; }
   .settings-row label { display: flex; align-items: center; gap: 6px; }
-  .empty-hint {
-    color: #999;
-    font-size: 13px;
-    padding: 12px 4px;
-  }
-  footer {
-    text-align: center;
-    font-size: 12px;
-    color: #aaa;
-    margin-top: 24px;
-  }
+  .empty-hint { color: #999; font-size: 13px; padding: 12px 4px; }
+  .tts-note { font-size: 12px; color: #888; margin-top: 8px; text-align: left; line-height: 1.6; }
+  footer { text-align: center; font-size: 12px; color: #aaa; margin-top: 24px; }
 </style>
 </head>
 <body>
@@ -222,9 +106,26 @@
     <div id="emptyHint" class="empty-hint">还没有单词，先在上面添加一些吧。</div>
   </div>
 
+  <div class="card">
+    <div class="settings-row" style="justify-content:flex-start; margin-top:0;">
+      <label><input type="checkbox" id="useGoogleToggle"> 使用 Google WaveNet 高质量语音（更自然，支持锁屏/后台播放）</label>
+    </div>
+    <div class="settings-row" style="justify-content:flex-start;">
+      <label>API Key：
+        <input type="password" id="googleApiKey" class="small" placeholder="粘贴你的 Google Cloud API Key" style="width:220px;">
+      </label>
+      <label>语音名称：
+        <input type="text" id="googleVoiceName" class="small" placeholder="默认 en-US-Wavenet-F" style="width:180px;">
+      </label>
+    </div>
+    <div class="tts-note">
+      API Key 只保存在你当前浏览器的 localStorage，只会直接发给 Google 官方接口，不经过任何第三方服务器。使用前需要在 Google Cloud 控制台开通 "Cloud Text-to-Speech API" 并启用结算（每月有免费额度）。开启此选项后，播放会使用真实 mp3 音频文件，支持锁屏/切后台继续播放；不开启则使用免费的系统语音，但息屏后会暂停。
+    </div>
+  </div>
+
   <div class="card play-panel">
     <div class="settings-row" style="justify-content:center;">
-      <label>朗读语音：
+      <label>系统语音：
         <select id="voiceSelect"></select>
       </label>
       <label>语速：
@@ -247,6 +148,7 @@
     <div class="phase-tag" id="phaseTag" style="display:none;"></div>
     <div class="current-word" id="currentWordDisplay"></div>
     <div class="status" id="statusText">选择单词后点击播放</div>
+    <audio id="ttsPlayer" playsinline style="display:none;"></audio>
   </div>
 
   <footer>数据保存在本机浏览器（localStorage），换设备/浏览器需重新导入。</footer>
@@ -256,13 +158,19 @@
 const STORAGE_KEY = 'spelling_trainer_words_v1';
 const SELECTED_KEY = 'spelling_trainer_selected_v1';
 const SETTINGS_KEY = 'spelling_trainer_settings_v1';
+const DEFAULT_GOOGLE_VOICE = 'en-US-Wavenet-F';
+
 let words = [];
 let selected = new Set();
 let synth = window.speechSynthesis;
 let voices = [];
-let playQueue = [];
 let isPlaying = false;
 let stopRequested = false;
+let currentAudio = null;
+
+const ttsCache = new Map();
+const silenceCache = new Map();
+let unlockSrc = null;
 
 function loadWords() {
   try {
@@ -270,9 +178,7 @@ function loadWords() {
     words = raw ? JSON.parse(raw) : [];
   } catch (e) { words = []; }
 }
-function saveWords() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(words));
-}
+function saveWords() { localStorage.setItem(STORAGE_KEY, JSON.stringify(words)); }
 
 function loadSelected() {
   try {
@@ -281,9 +187,7 @@ function loadSelected() {
     selected = new Set(arr.filter(i => i >= 0 && i < words.length));
   } catch (e) { selected = new Set(); }
 }
-function saveSelected() {
-  localStorage.setItem(SELECTED_KEY, JSON.stringify([...selected]));
-}
+function saveSelected() { localStorage.setItem(SELECTED_KEY, JSON.stringify([...selected])); }
 
 function loadSettings() {
   try {
@@ -301,14 +205,15 @@ function saveSettings() {
     rate: document.getElementById('rateInput').value,
     letterGap: document.getElementById('letterGapInput').value,
     wordGap: document.getElementById('wordGapInput').value,
-    repeat: document.getElementById('repeatInput').value
+    repeat: document.getElementById('repeatInput').value,
+    useGoogle: document.getElementById('useGoogleToggle').checked,
+    googleApiKey: document.getElementById('googleApiKey').value,
+    googleVoiceName: document.getElementById('googleVoiceName').value
   };
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 }
 
-function normalizeWord(w) {
-  return w.trim().replace(/[^a-zA-Z'-]/g, '');
-}
+function normalizeWord(w) { return w.trim().replace(/[^a-zA-Z'-]/g, ''); }
 
 function addWord(raw) {
   const w = normalizeWord(raw);
@@ -321,11 +226,7 @@ function renderList() {
   const ul = document.getElementById('wordList');
   const emptyHint = document.getElementById('emptyHint');
   ul.innerHTML = '';
-  if (words.length === 0) {
-    emptyHint.style.display = 'block';
-  } else {
-    emptyHint.style.display = 'none';
-  }
+  emptyHint.style.display = words.length === 0 ? 'block' : 'none';
   words.forEach((w, idx) => {
     const li = document.createElement('li');
     const left = document.createElement('div');
@@ -385,22 +286,15 @@ function populateVoices() {
     opt.textContent = `${v.name} (${v.lang})`;
     select.appendChild(opt);
   });
-
   const settings = loadSettings();
   let preferredIdx = -1;
-  if (settings.voiceName) {
-    preferredIdx = voices.findIndex(v => v.name === settings.voiceName);
-  }
-  if (preferredIdx === -1) {
-    preferredIdx = voices.findIndex(v => v.name.toLowerCase().includes('samantha'));
-  }
-  if (preferredIdx !== -1) {
-    select.value = preferredIdx;
-  }
+  if (settings.voiceName) preferredIdx = voices.findIndex(v => v.name === settings.voiceName);
+  if (preferredIdx === -1) preferredIdx = voices.findIndex(v => v.name.toLowerCase().includes('samantha'));
+  if (preferredIdx !== -1) select.value = preferredIdx;
   select.addEventListener('change', saveSettings);
 }
 
-function speak(text, rate) {
+function speakSystem(text, rate) {
   return new Promise((resolve) => {
     if (stopRequested) { resolve(); return; }
     const utter = new SpeechSynthesisUtterance(text);
@@ -419,24 +313,64 @@ function speak(text, rate) {
   });
 }
 
-function wait(seconds) {
-  return new Promise(resolve => {
-    if (stopRequested) { resolve(); return; }
-    setTimeout(resolve, seconds * 1000);
-  });
+// ---- Silence WAV generator (for gaps in the continuous audio chain) ----
+function makeSilenceBlobUrl(durationSec) {
+  const key = durationSec.toFixed(2);
+  if (silenceCache.has(key)) return silenceCache.get(key);
+  const sampleRate = 8000;
+  const numSamples = Math.max(1, Math.round(durationSec * sampleRate));
+  const buffer = new ArrayBuffer(44 + numSamples * 2);
+  const view = new DataView(buffer);
+  function writeStr(offset, str) { for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i)); }
+  writeStr(0, 'RIFF');
+  view.setUint32(4, 36 + numSamples * 2, true);
+  writeStr(8, 'WAVE');
+  writeStr(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  writeStr(36, 'data');
+  view.setUint32(40, numSamples * 2, true);
+  const blob = new Blob([buffer], { type: 'audio/wav' });
+  const url = URL.createObjectURL(blob);
+  silenceCache.set(key, url);
+  return url;
 }
 
-async function spellWord(word, rate, letterGap) {
-  const letters = word.split('');
-  for (let i = 0; i < letters.length; i++) {
-    if (stopRequested) return;
-    // Append a period after each letter: many system/browser TTS voices (e.g. Safari's
-    // "Daniel (en-GB)") treat a bare, isolated single character as ambiguous and prefix
-    // it with "Capital" regardless of actual case. Giving it sentence-like context
-    // (a trailing period) avoids that disambiguation behaviour and just speaks the letter.
-    await speak(letters[i].toLowerCase() + '.', rate);
-    if (i < letters.length - 1) await wait(letterGap);
+function extractLangCode(voiceName) {
+  const parts = (voiceName || '').split('-');
+  if (parts.length >= 2) return parts[0] + '-' + parts[1];
+  return 'en-US';
+}
+
+async function fetchGoogleTTSUrl(text, apiKey, voiceName, rate) {
+  const cacheKey = `${voiceName}|${rate}|${text}`;
+  if (ttsCache.has(cacheKey)) return ttsCache.get(cacheKey);
+  const resp = await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${encodeURIComponent(apiKey)}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      input: { text },
+      voice: { languageCode: extractLangCode(voiceName), name: voiceName },
+      audioConfig: { audioEncoding: 'MP3', speakingRate: Math.min(4, Math.max(0.25, rate)) }
+    })
+  });
+  if (!resp.ok) {
+    const errText = await resp.text().catch(() => '');
+    throw new Error('Google TTS request failed: ' + resp.status + ' ' + errText);
   }
+  const data = await resp.json();
+  const byteChars = atob(data.audioContent);
+  const byteNumbers = new Array(byteChars.length);
+  for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
+  const blob = new Blob([new Uint8Array(byteNumbers)], { type: 'audio/mp3' });
+  const url = URL.createObjectURL(blob);
+  ttsCache.set(cacheKey, url);
+  return url;
 }
 
 function setPhase(text) {
@@ -446,9 +380,121 @@ function setPhase(text) {
   tag.textContent = text;
 }
 
+function updateMediaSession(title) {
+  if ('mediaSession' in navigator) {
+    navigator.mediaSession.metadata = new MediaMetadata({ title: title || '拼写练习', artist: 'Spelling Trainer' });
+  }
+}
+
+function stopPlayback() {
+  stopRequested = true;
+  synth.cancel();
+  const player = document.getElementById('ttsPlayer');
+  player.onended = null;
+  player.pause();
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+}
+
+// ---- Legacy sequential playback using system speechSynthesis (no reliable background support) ----
+async function playSelectedSystem(selIdx, rate, letterGap, wordGap, repeat) {
+  const total = selIdx.length * repeat;
+  let count = 0;
+  async function speak(text) { return speakSystem(text, rate); }
+  async function wait(s) { return new Promise(r => { if (stopRequested) { r(); return; } setTimeout(r, s * 1000); }); }
+  async function spellWord(word) {
+    const letters = word.split('');
+    for (let i = 0; i < letters.length; i++) {
+      if (stopRequested) return;
+      await speak(letters[i].toLowerCase() + '.');
+      if (i < letters.length - 1) await wait(letterGap);
+    }
+  }
+  for (let r = 0; r < repeat; r++) {
+    for (const idx of selIdx) {
+      if (stopRequested) break;
+      const word = words[idx];
+      count++;
+      document.getElementById('currentWordDisplay').textContent = word;
+      document.getElementById('statusText').textContent = `进度 ${count}/${total}`;
+      updateMediaSession(word);
+      setPhase('① 读音'); await speak(word); if (stopRequested) break; await wait(0.4);
+      setPhase('② 拼读字母'); await spellWord(word); if (stopRequested) break; await wait(0.4);
+      setPhase('③ 读音'); await speak(word); if (stopRequested) break;
+      await wait(wordGap);
+    }
+    if (stopRequested) break;
+  }
+}
+
+// ---- Google WaveNet playback: builds a queue of real audio clips chained through ONE <audio> element ----
+async function playSelectedGoogle(selIdx, rate, letterGap, wordGap, repeat, apiKey, voiceName) {
+  const player = document.getElementById('ttsPlayer');
+  const steps = [];
+  for (let r = 0; r < repeat; r++) {
+    for (const idx of selIdx) {
+      const word = words[idx];
+      steps.push({ kind: 'word', word, text: word });
+      steps.push({ kind: 'gap', dur: 0.4 });
+      const letters = word.split('');
+      letters.forEach((ch, i) => {
+        steps.push({ kind: 'letter', word, text: ch.toLowerCase() + '.' });
+        if (i < letters.length - 1) steps.push({ kind: 'gap', dur: letterGap });
+      });
+      steps.push({ kind: 'gap', dur: 0.4 });
+      steps.push({ kind: 'word', word, text: word });
+      steps.push({ kind: 'gap', dur: wordGap });
+    }
+  }
+
+  document.getElementById('statusText').textContent = '正在准备语音（首次播放需要联网请求）…';
+  for (const step of steps) {
+    if (stopRequested) return;
+    if (step.kind === 'gap') {
+      step.url = makeSilenceBlobUrl(step.dur);
+    } else {
+      try {
+        step.url = await fetchGoogleTTSUrl(step.text, apiKey, voiceName, rate);
+      } catch (err) {
+        console.warn('Google TTS failed, falling back to system voice for this run:', err);
+        document.getElementById('statusText').textContent = 'Google 请求失败，已自动切换回系统语音';
+        return playSelectedSystem(selIdx, rate, letterGap, wordGap, repeat);
+      }
+    }
+  }
+
+  const total = selIdx.length * repeat;
+  let wordCount = 0;
+  let i = 0;
+
+  await new Promise((resolve) => {
+    function playNext() {
+      if (stopRequested || i >= steps.length) { resolve(); return; }
+      const step = steps[i];
+      if (step.kind === 'word') {
+        document.getElementById('currentWordDisplay').textContent = step.word;
+        updateMediaSession(step.word);
+        const wordOccurrencesBefore = steps.slice(0, i).filter(s => s.kind === 'word' && s.word === step.word).length;
+        setPhase(wordOccurrencesBefore % 2 === 0 ? '① 读音' : '③ 读音');
+        if (wordOccurrencesBefore === 0) {
+          wordCount++;
+          document.getElementById('statusText').textContent = `进度 ${wordCount}/${total}`;
+        }
+      } else if (step.kind === 'letter') {
+        setPhase('② 拼读字母');
+      }
+      player.src = step.url;
+      player.playbackRate = 1;
+      player.play().catch(() => { i++; playNext(); });
+      i++;
+    }
+    player.onended = playNext;
+    playNext();
+  });
+}
+
 async function playSelected() {
   if (isPlaying) return;
-  const selIdx = [...selected].sort((a,b) => a-b);
+  const selIdx = [...selected].sort((a, b) => a - b);
   if (selIdx.length === 0) {
     document.getElementById('statusText').textContent = '请先勾选要播放的单词';
     return;
@@ -462,35 +508,19 @@ async function playSelected() {
   const letterGap = parseFloat(document.getElementById('letterGapInput').value) || 0.4;
   const wordGap = parseFloat(document.getElementById('wordGapInput').value) || 1.5;
   const repeat = parseInt(document.getElementById('repeatInput').value) || 1;
+  const useGoogle = document.getElementById('useGoogleToggle').checked;
+  const apiKey = document.getElementById('googleApiKey').value.trim();
+  const voiceName = document.getElementById('googleVoiceName').value.trim() || DEFAULT_GOOGLE_VOICE;
 
-  const total = selIdx.length * repeat;
-  let count = 0;
-
-  for (let r = 0; r < repeat; r++) {
-    for (const idx of selIdx) {
-      if (stopRequested) break;
-      const word = words[idx];
-      count++;
-      document.getElementById('currentWordDisplay').textContent = word;
-      document.getElementById('statusText').textContent = `进度 ${count}/${total}`;
-
-      setPhase('① 读音');
-      await speak(word, rate);
-      if (stopRequested) break;
-      await wait(0.4);
-
-      setPhase('② 拼读字母');
-      await spellWord(word, rate, letterGap);
-      if (stopRequested) break;
-      await wait(0.4);
-
-      setPhase('③ 读音');
-      await speak(word, rate);
-      if (stopRequested) break;
-
-      await wait(wordGap);
-    }
-    if (stopRequested) break;
+  if (useGoogle && apiKey) {
+    // Unlock iOS audio playback synchronously within this click's user-gesture context.
+    const player = document.getElementById('ttsPlayer');
+    if (!unlockSrc) unlockSrc = makeSilenceBlobUrl(0.05);
+    player.src = unlockSrc;
+    player.play().catch(() => {});
+    await playSelectedGoogle(selIdx, rate, letterGap, wordGap, repeat, apiKey, voiceName);
+  } else {
+    await playSelectedSystem(selIdx, rate, letterGap, wordGap, repeat);
   }
 
   setPhase('');
@@ -502,11 +532,6 @@ async function playSelected() {
   document.getElementById('stopBtn').disabled = true;
 }
 
-function stopPlayback() {
-  stopRequested = true;
-  synth.cancel();
-}
-
 document.getElementById('addBtn').addEventListener('click', () => {
   const input = document.getElementById('singleInput');
   addWord(input.value);
@@ -515,9 +540,7 @@ document.getElementById('addBtn').addEventListener('click', () => {
   renderList();
 });
 document.getElementById('singleInput').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') {
-    document.getElementById('addBtn').click();
-  }
+  if (e.key === 'Enter') document.getElementById('addBtn').click();
 });
 document.getElementById('bulkAddBtn').addEventListener('click', () => {
   const text = document.getElementById('bulkInput').value;
@@ -548,7 +571,7 @@ document.getElementById('playBtn').addEventListener('click', playSelected);
 document.getElementById('stopBtn').addEventListener('click', stopPlayback);
 
 document.getElementById('exportBtn').addEventListener('click', () => {
-  const blob = new Blob([JSON.stringify(words, null, 2)], {type: 'application/json'});
+  const blob = new Blob([JSON.stringify(words, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -581,7 +604,7 @@ document.getElementById('importFile').addEventListener('change', (e) => {
   reader.readAsText(file);
 });
 
-['rateInput','letterGapInput','wordGapInput','repeatInput'].forEach(id => {
+['rateInput', 'letterGapInput', 'wordGapInput', 'repeatInput', 'useGoogleToggle', 'googleApiKey', 'googleVoiceName'].forEach(id => {
   document.getElementById(id).addEventListener('change', saveSettings);
 });
 
@@ -591,11 +614,17 @@ function applySavedSettings() {
   if (settings.letterGap) document.getElementById('letterGapInput').value = settings.letterGap;
   if (settings.wordGap) document.getElementById('wordGapInput').value = settings.wordGap;
   if (settings.repeat) document.getElementById('repeatInput').value = settings.repeat;
+  if (settings.useGoogle) document.getElementById('useGoogleToggle').checked = settings.useGoogle;
+  if (settings.googleApiKey) document.getElementById('googleApiKey').value = settings.googleApiKey;
+  if (settings.googleVoiceName) document.getElementById('googleVoiceName').value = settings.googleVoiceName;
 }
 
-if (synth.onvoiceschanged !== undefined) {
-  synth.onvoiceschanged = populateVoices;
+if ('mediaSession' in navigator) {
+  navigator.mediaSession.setActionHandler('pause', () => stopPlayback());
+  navigator.mediaSession.setActionHandler('stop', () => stopPlayback());
 }
+
+if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = populateVoices;
 applySavedSettings();
 populateVoices();
 loadWords();
