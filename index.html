@@ -22,7 +22,13 @@
     padding: 20px;
   }
   .container { max-width: 720px; margin: 0 auto; }
-  h1 { font-size: 22px; text-align: center; margin-bottom: 4px; }
+  .top-row { display: flex; align-items: center; justify-content: center; position: relative; margin-bottom: 4px; }
+  h1 { font-size: 22px; text-align: center; margin: 0; }
+  .settings-btn {
+    position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+    background: #eef1f8; color: #444; border: none; border-radius: 8px;
+    padding: 8px 14px; font-size: 13px; cursor: pointer;
+  }
   .subtitle { text-align: center; color: #777; font-size: 13px; margin-bottom: 20px; }
   .card {
     background: var(--card);
@@ -63,16 +69,16 @@
   .play-panel { text-align: center; }
   .play-panel .main-btn { font-size: 16px; padding: 14px 28px; border-radius: 10px; }
   .status { margin-top: 14px; font-size: 15px; min-height: 24px; color: #555; }
-  .current-word { font-size: 34px; font-weight: 700; letter-spacing: 4px; margin: 10px 0; min-height: 44px; color: var(--primary); }
-  .phase-tag { display: inline-block; padding: 2px 10px; border-radius: 20px; background: #eef1f8; font-size: 12px; color: #666; margin-bottom: 6px; }
-  select, input[type=number], input[type=password], input[type=text].small {
-    padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px;
-  }
-  .settings-row { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; font-size: 13px; margin-top: 10px; color: #555; }
-  .settings-row label { display: flex; align-items: center; gap: 6px; }
   .empty-hint { color: #999; font-size: 13px; padding: 12px 4px; }
-  .tts-note { font-size: 12px; color: #888; margin-top: 8px; text-align: left; line-height: 1.6; }
   footer { text-align: center; font-size: 12px; color: #aaa; margin-top: 24px; }
+
+  .result-player { display: none; margin-top: 16px; }
+  .result-player audio { width: 100%; }
+  .result-player a {
+    display: inline-block; margin-top: 10px;
+    background: #34a853; color: #fff; padding: 8px 16px;
+    border-radius: 8px; text-decoration: none; font-size: 13px;
+  }
 
   .cache-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px; }
   .cache-info { font-size: 12px; color: #888; }
@@ -82,39 +88,51 @@
     padding: 10px 8px; border-bottom: 1px solid var(--border);
   }
   ul#cacheList li:last-child { border-bottom: none; }
-  .cache-label { font-size: 14px; font-weight: 600; min-width: 70px; }
+  .cache-label { font-size: 14px; font-weight: 600; min-width: 90px; }
   .cache-sub { font-size: 11px; color: #999; }
   .cache-audio { flex: 1; min-width: 180px; height: 32px; }
   .cache-actions { display: flex; gap: 6px; }
   .cache-actions a, .cache-actions button { padding: 5px 10px; font-size: 12px; text-decoration: none; border-radius: 6px; }
   .cache-actions a { background: #eef1f8; color: #444; }
 
-  .session-download {
-    display: none;
-    margin-top: 12px;
-    padding: 10px;
-    background: #eef7ee;
-    border: 1px solid #cdeacd;
-    border-radius: 8px;
-    font-size: 13px;
-    text-align: center;
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+    align-items: center; justify-content: center; z-index: 100; padding: 20px;
   }
-  .session-download a {
-    display: inline-block;
-    margin-top: 6px;
-    background: #34a853;
-    color: #fff;
-    padding: 8px 16px;
-    border-radius: 8px;
-    text-decoration: none;
-    font-size: 13px;
+  .modal-overlay.open { display: flex; }
+  .modal-box {
+    background: #fff; border-radius: 14px; padding: 20px; width: 100%; max-width: 460px;
+    max-height: 90vh; overflow-y: auto;
   }
+  .modal-box h2 { margin-top: 0; font-size: 17px; }
+  .modal-box h3 { font-size: 14px; margin: 18px 0 8px 0; color: #444; }
+  .modal-row { margin-bottom: 14px; }
+  .modal-row label { display: block; font-size: 13px; color: #555; margin-bottom: 6px; }
+  .modal-row input[type=password], .modal-row input[type=text], .modal-row input[type=number] {
+    width: 100%; padding: 9px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px;
+  }
+  .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .modal-note { font-size: 12px; color: #888; line-height: 1.6; margin-bottom: 14px; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+
+  ul#clipCacheList { list-style: none; margin: 0; padding: 0; max-height: 220px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; }
+  ul#clipCacheList li {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding: 8px 10px; border-bottom: 1px solid var(--border); font-size: 13px;
+  }
+  ul#clipCacheList li:last-child { border-bottom: none; }
+  .clip-text { font-weight: 600; }
+  .clip-sub { font-size: 11px; color: #999; }
+  .clip-del { padding: 4px 8px; font-size: 11px; }
 </style>
 </head>
 <body>
 <div class="container">
-  <h1>拼写练习工具</h1>
-  <div class="subtitle">输入单词 → 勾选 → 播放「读音 - 拼读 - 读音」，帮助孩子练习拼写</div>
+  <div class="top-row">
+    <h1>拼写练习工具</h1>
+    <button class="settings-btn" id="openSettingsBtn">⚙ 设置</button>
+  </div>
+  <div class="subtitle">输入单词 → 勾选 → 生成「读音 - 拼读 - 读音」整段发音</div>
 
   <div class="card">
     <div class="add-row">
@@ -143,72 +161,80 @@
     <div id="emptyHint" class="empty-hint">还没有单词，先在上面添加一些吧。</div>
   </div>
 
-  <div class="card">
-    <div class="settings-row" style="justify-content:flex-start; margin-top:0;">
-      <label><input type="checkbox" id="useGoogleToggle"> 使用 Google WaveNet 高质量语音（更自然，支持锁屏/后台播放）</label>
-    </div>
-    <div class="settings-row" style="justify-content:flex-start;">
-      <label>API Key：
-        <input type="password" id="googleApiKey" class="small" placeholder="粘贴你的 Google Cloud API Key" style="width:220px;">
-      </label>
-      <label>语音名称：
-        <input type="text" id="googleVoiceName" class="small" placeholder="默认 en-US-Wavenet-F" style="width:180px;">
-      </label>
-    </div>
-    <div class="tts-note">
-      API Key 只保存在你当前浏览器的 localStorage，只会直接发给 Google 官方接口，不经过任何第三方服务器。使用前需要在 Google Cloud 控制台开通 "Cloud Text-to-Speech API"（注意不是 Speech-to-Text）并启用结算（每月有免费额度）。生成过的语音片段会用哈希值作为唯一标识缓存在浏览器本地（见下方"语音缓存库"），同一个单词/字母（相同语音+语速）不会重复付费请求。开启此模式后，每次播放完还会自动生成一份"整段发音"的 mp3 供下载，并同样存入缓存库。
-    </div>
-  </div>
-
   <div class="card play-panel">
-    <div class="settings-row" style="justify-content:center;">
-      <label>系统语音：
-        <select id="voiceSelect"></select>
-      </label>
-      <label>语速：
-        <input type="number" id="rateInput" value="0.85" min="0.3" max="1.5" step="0.05" style="width:70px;">
-      </label>
-      <label>字母间停顿(秒)：
-        <input type="number" id="letterGapInput" value="0.4" min="0" max="2" step="0.1" style="width:70px;">
-      </label>
-      <label>单词间停顿(秒)：
-        <input type="number" id="wordGapInput" value="1.5" min="0" max="5" step="0.5" style="width:70px;">
-      </label>
-      <label>重复次数：
-        <input type="number" id="repeatInput" value="1" min="1" max="5" step="1" style="width:60px;">
-      </label>
-    </div>
-    <div style="margin-top:14px;">
-      <button id="playBtn" class="main-btn">▶ 播放已选单词</button>
-      <button id="stopBtn" class="secondary" disabled>■ 停止</button>
-    </div>
-    <div class="phase-tag" id="phaseTag" style="display:none;"></div>
-    <div class="current-word" id="currentWordDisplay"></div>
-    <div class="status" id="statusText">选择单词后点击播放</div>
-    <audio id="ttsPlayer" playsinline style="display:none;"></audio>
-    <div class="session-download" id="sessionDownload">
-      <div id="sessionDownloadStatus">整段发音准备中…</div>
-      <a id="sessionDownloadLink" style="display:none;">⬇ 下载本次整段发音 (MP3)</a>
-    </div>
-    <div class="tts-note" id="gapNote">
-      提示：系统语音的字母间隔受语音引擎自身启动延迟影响，实际间隔可能比设置值略长；Google WaveNet 模式下间隔是精确拼接的静音音频，会更准确。"整段发音下载"功能仅在 Google WaveNet 模式下可用，系统语音因浏览器限制无法导出录音。
+    <button id="generateBtn" class="main-btn">⚙ 生成整段发音</button>
+    <button id="cancelBtn" class="secondary" style="display:none;">取消</button>
+    <div class="status" id="statusText">勾选单词后点击"生成整段发音"</div>
+    <div class="result-player" id="resultPlayer">
+      <audio id="resultAudio" controls></audio>
+      <div><a id="resultDownloadLink">⬇ 下载 MP3</a></div>
     </div>
   </div>
 
   <div class="card">
     <div class="cache-toolbar">
-      <div>🎵 语音缓存库</div>
-      <div class="cache-info" id="cacheInfo">共 0 个片段</div>
+      <div>🎵 已生成的录音</div>
+      <div class="cache-info" id="cacheInfo">共 0 个</div>
     </div>
     <div class="cache-toolbar" style="margin-top:0;">
-      <button id="clearCacheBtn" class="danger">清空全部缓存</button>
-      <div class="cache-info">每个片段自带播放条，可暂停/拖动进度，也可下载 mp3</div>
+      <button id="clearCacheBtn" class="danger">清空全部</button>
+      <div class="cache-info">相同单词组合+设置会自动复用，不重复请求</div>
     </div>
     <ul id="cacheList"></ul>
-    <div id="cacheEmptyHint" class="empty-hint">还没有缓存的语音片段，播放一次 Google WaveNet 语音后会自动出现在这里。</div>
+    <div id="cacheEmptyHint" class="empty-hint">还没有生成过录音，点击上方"生成整段发音"后会出现在这里。</div>
   </div>
 
   <footer>数据保存在本机浏览器（localStorage / IndexedDB），换设备/浏览器需重新导入或重新生成语音。</footer>
+</div>
+
+<div class="modal-overlay" id="settingsOverlay">
+  <div class="modal-box">
+    <h2>⚙ 语音设置</h2>
+    <div class="modal-note">
+      使用 Google WaveNet 高质量语音生成读音。需要在 Google Cloud 控制台开通 "Cloud Text-to-Speech API"（不是 Speech-to-Text）并启用结算（有免费额度）。API Key 只保存在你当前浏览器的 localStorage，只会直接发给 Google 官方接口。
+    </div>
+    <div class="modal-note" id="apiUsageInfo" style="background:#f5f7fb;padding:8px 10px;border-radius:8px;">
+      累计已请求字符数：0
+    </div>
+    <div class="modal-row">
+      <label>Google Cloud API Key</label>
+      <input type="password" id="googleApiKey" placeholder="粘贴你的 API Key">
+    </div>
+    <div class="modal-row">
+      <label>语音名称</label>
+      <input type="text" id="googleVoiceName" placeholder="默认 en-US-Wavenet-F">
+    </div>
+    <div class="modal-grid">
+      <div class="modal-row">
+        <label>语速</label>
+        <input type="number" id="rateInput" value="0.85" min="0.3" max="1.5" step="0.05">
+      </div>
+      <div class="modal-row">
+        <label>重复次数</label>
+        <input type="number" id="repeatInput" value="1" min="1" max="5" step="1">
+      </div>
+      <div class="modal-row">
+        <label>字母间停顿(秒)</label>
+        <input type="number" id="letterGapInput" value="0.4" min="0" max="2" step="0.1">
+      </div>
+      <div class="modal-row">
+        <label>单词间停顿(秒)</label>
+        <input type="number" id="wordGapInput" value="1.5" min="0" max="5" step="0.5">
+      </div>
+    </div>
+
+    <h3>单个语音片段缓存（用于复用，避免重复付费请求）</h3>
+    <div class="cache-info" id="clipCacheInfo" style="margin-bottom:6px;">共 0 个片段</div>
+    <ul id="clipCacheList"></ul>
+    <div id="clipCacheEmptyHint" style="font-size:12px;color:#999;margin-top:6px;">暂无缓存片段</div>
+    <div class="modal-actions" style="justify-content:flex-start; margin-top:8px;">
+      <button class="danger" id="clearClipCacheBtn">清空片段缓存</button>
+    </div>
+
+    <div class="modal-actions">
+      <button class="secondary" id="closeSettingsBtn">关闭</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -218,23 +244,20 @@ const SETTINGS_KEY = 'spelling_trainer_settings_v1';
 const DEFAULT_GOOGLE_VOICE = 'en-US-Wavenet-F';
 const DB_NAME = 'spelling_trainer_db';
 const DB_STORE = 'ttsCache';
+const API_USAGE_KEY = 'spelling_trainer_api_usage_v1';
 
 let words = [];
 let selected = new Set();
-let synth = window.speechSynthesis;
-let voices = [];
-let isPlaying = false;
+let isGenerating = false;
 let stopRequested = false;
 let currentRunId = 0;
 
-const ttsUrlCache = new Map();   // in-memory: hash -> blob URL (this session only)
-const silenceCache = new Map();
-let unlockSrc = null;
+const ttsUrlCache = new Map();
 let dbPromise = null;
-let activeResolvers = [];
-let sessionDownloadUrl = null;
+let resultObjectUrl = null;
+let requestedCharsThisRun = 0;
 
-// ---- Hashing (SHA-256, hex) used as the stable cache key / filename for each TTS clip ----
+// ---- Hashing (SHA-256, hex) ----
 async function hashString(str) {
   const enc = new TextEncoder().encode(str);
   const digest = await crypto.subtle.digest('SHA-256', enc);
@@ -256,7 +279,6 @@ function openDB() {
   });
   return dbPromise;
 }
-
 async function dbPut(record) {
   const db = await openDB();
   return new Promise((resolve, reject) => {
@@ -266,7 +288,6 @@ async function dbPut(record) {
     tx.onerror = () => reject(tx.error);
   });
 }
-
 async function dbGet(key) {
   const db = await openDB();
   return new Promise((resolve, reject) => {
@@ -276,7 +297,6 @@ async function dbGet(key) {
     req.onerror = () => reject(req.error);
   });
 }
-
 async function dbGetAll() {
   const db = await openDB();
   return new Promise((resolve, reject) => {
@@ -286,22 +306,11 @@ async function dbGetAll() {
     req.onerror = () => reject(req.error);
   });
 }
-
 async function dbDelete(key) {
   const db = await openDB();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(DB_STORE, 'readwrite');
     tx.objectStore(DB_STORE).delete(key);
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
-}
-
-async function dbClear() {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(DB_STORE, 'readwrite');
-    tx.objectStore(DB_STORE).clear();
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
   });
@@ -324,6 +333,28 @@ function loadSelected() {
 }
 function saveSelected() { localStorage.setItem(SELECTED_KEY, JSON.stringify([...selected])); }
 
+function loadApiUsage() {
+  try {
+    const raw = localStorage.getItem(API_USAGE_KEY);
+    return raw ? JSON.parse(raw) : { totalChars: 0 };
+  } catch (e) { return { totalChars: 0 }; }
+}
+function addApiUsage(chars) {
+  if (!chars) return;
+  const usage = loadApiUsage();
+  usage.totalChars = (usage.totalChars || 0) + chars;
+  usage.updatedAt = Date.now();
+  localStorage.setItem(API_USAGE_KEY, JSON.stringify(usage));
+  renderApiUsage();
+}
+function renderApiUsage() {
+  const usage = loadApiUsage();
+  const el = document.getElementById('apiUsageInfo');
+  if (el) {
+    el.textContent = `累计已请求字符数：${(usage.totalChars || 0).toLocaleString()} （WaveNet 每月前 100 万字符免费，之后约 $16/百万字符）`;
+  }
+}
+
 function loadSettings() {
   try {
     const raw = localStorage.getItem(SETTINGS_KEY);
@@ -332,21 +363,44 @@ function loadSettings() {
 }
 function saveSettings() {
   const settings = {
-    voiceName: (() => {
-      const select = document.getElementById('voiceSelect');
-      const idx = select.value;
-      return (voices[idx] && voices[idx].name) || '';
-    })(),
     rate: document.getElementById('rateInput').value,
     letterGap: document.getElementById('letterGapInput').value,
     wordGap: document.getElementById('wordGapInput').value,
     repeat: document.getElementById('repeatInput').value,
-    useGoogle: document.getElementById('useGoogleToggle').checked,
     googleApiKey: document.getElementById('googleApiKey').value,
     googleVoiceName: document.getElementById('googleVoiceName').value
   };
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 }
+function applySavedSettings() {
+  const settings = loadSettings();
+  if (settings.rate) document.getElementById('rateInput').value = settings.rate;
+  if (settings.letterGap) document.getElementById('letterGapInput').value = settings.letterGap;
+  if (settings.wordGap) document.getElementById('wordGapInput').value = settings.wordGap;
+  if (settings.repeat) document.getElementById('repeatInput').value = settings.repeat;
+  if (settings.googleApiKey) document.getElementById('googleApiKey').value = settings.googleApiKey;
+  if (settings.googleVoiceName) document.getElementById('googleVoiceName').value = settings.googleVoiceName;
+}
+
+['rateInput', 'letterGapInput', 'wordGapInput', 'repeatInput', 'googleApiKey', 'googleVoiceName'].forEach(id => {
+  document.getElementById(id).addEventListener('change', saveSettings);
+});
+
+document.getElementById('openSettingsBtn').addEventListener('click', () => {
+  document.getElementById('settingsOverlay').classList.add('open');
+  renderClipCacheList();
+  renderApiUsage();
+});
+document.getElementById('closeSettingsBtn').addEventListener('click', () => {
+  saveSettings();
+  document.getElementById('settingsOverlay').classList.remove('open');
+});
+document.getElementById('settingsOverlay').addEventListener('click', (e) => {
+  if (e.target.id === 'settingsOverlay') {
+    saveSettings();
+    document.getElementById('settingsOverlay').classList.remove('open');
+  }
+});
 
 function normalizeWord(w) { return w.trim().replace(/[^a-zA-Z'-]/g, ''); }
 
@@ -405,93 +459,20 @@ function updateCountInfo() {
   document.getElementById('countInfo').textContent = `共 ${words.length} 个单词，已选 ${selected.size} 个`;
 }
 
-function populateVoices() {
-  voices = synth.getVoices().filter(v => v.lang.toLowerCase().startsWith('en'));
-  const select = document.getElementById('voiceSelect');
-  select.innerHTML = '';
-  if (voices.length === 0) {
-    const opt = document.createElement('option');
-    opt.textContent = '默认语音（英文）';
-    select.appendChild(opt);
-    return;
-  }
-  voices.forEach((v, i) => {
-    const opt = document.createElement('option');
-    opt.value = i;
-    opt.textContent = `${v.name} (${v.lang})`;
-    select.appendChild(opt);
-  });
-  const settings = loadSettings();
-  let preferredIdx = -1;
-  if (settings.voiceName) preferredIdx = voices.findIndex(v => v.name === settings.voiceName);
-  if (preferredIdx === -1) preferredIdx = voices.findIndex(v => v.name.toLowerCase().includes('samantha'));
-  if (preferredIdx !== -1) select.value = preferredIdx;
-  select.addEventListener('change', saveSettings);
-}
-
-function speakSystem(text, rate) {
-  return new Promise((resolve) => {
-    if (stopRequested) { resolve(); return; }
-    const utter = new SpeechSynthesisUtterance(text);
-    const select = document.getElementById('voiceSelect');
-    const idx = select.value;
-    if (voices.length > 0 && voices[idx]) {
-      utter.voice = voices[idx];
-      utter.lang = voices[idx].lang;
-    } else {
-      utter.lang = 'en-US';
-    }
-    utter.rate = rate;
-    utter.onend = resolve;
-    utter.onerror = resolve;
-    synth.speak(utter);
-  });
-}
-
-// ---- Silence WAV generator (for gaps in the continuous audio chain) ----
-function makeSilenceBlobUrl(durationSec) {
-  const key = durationSec.toFixed(2);
-  if (silenceCache.has(key)) return silenceCache.get(key);
-  const sampleRate = 8000;
-  const numSamples = Math.max(1, Math.round(durationSec * sampleRate));
-  const buffer = new ArrayBuffer(44 + numSamples * 2);
-  const view = new DataView(buffer);
-  function writeStr(offset, str) { for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i)); }
-  writeStr(0, 'RIFF');
-  view.setUint32(4, 36 + numSamples * 2, true);
-  writeStr(8, 'WAVE');
-  writeStr(12, 'fmt ');
-  view.setUint32(16, 16, true);
-  view.setUint16(20, 1, true);
-  view.setUint16(22, 1, true);
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * 2, true);
-  view.setUint16(32, 2, true);
-  view.setUint16(34, 16, true);
-  writeStr(36, 'data');
-  view.setUint32(40, numSamples * 2, true);
-  const blob = new Blob([buffer], { type: 'audio/wav' });
-  const url = URL.createObjectURL(blob);
-  silenceCache.set(key, url);
-  return url;
-}
-
 function extractLangCode(voiceName) {
   const parts = (voiceName || '').split('-');
   if (parts.length >= 2) return parts[0] + '-' + parts[1];
   return 'en-US';
 }
 
-async function fetchGoogleTTSUrl(text, apiKey, voiceName, rate) {
+async function fetchGoogleTTSClip(text, apiKey, voiceName, rate) {
   const hash = await hashString(`${voiceName}|${rate}|${text}`);
-
   if (ttsUrlCache.has(hash)) return ttsUrlCache.get(hash);
 
   const stored = await dbGet(hash).catch(() => null);
   if (stored && stored.blob) {
-    const url = URL.createObjectURL(stored.blob);
-    ttsUrlCache.set(hash, url);
-    return url;
+    ttsUrlCache.set(hash, stored.blob);
+    return stored.blob;
   }
 
   const resp = await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${encodeURIComponent(apiKey)}`, {
@@ -512,176 +493,58 @@ async function fetchGoogleTTSUrl(text, apiKey, voiceName, rate) {
   const byteNumbers = new Array(byteChars.length);
   for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
   const blob = new Blob([new Uint8Array(byteNumbers)], { type: 'audio/mp3' });
-  const url = URL.createObjectURL(blob);
-  ttsUrlCache.set(hash, url);
-
-  await dbPut({ key: hash, text, voiceName, rate, size: blob.size, createdAt: Date.now(), blob }).catch(() => {});
-  renderCacheList();
-
-  return url;
+  ttsUrlCache.set(hash, blob);
+  requestedCharsThisRun += text.length;
+  await dbPut({ key: hash, text, voiceName, rate, size: blob.size, createdAt: Date.now(), blob, type: 'clip' }).catch(() => {});
+  renderClipCacheList();
+  return blob;
 }
 
-function setPhase(text) {
-  const tag = document.getElementById('phaseTag');
-  if (!text) { tag.style.display = 'none'; return; }
-  tag.style.display = 'inline-block';
-  tag.textContent = text;
+function makeSilenceFloat(durationSec, sampleRate) {
+  return new Float32Array(Math.max(1, Math.round(durationSec * sampleRate)));
 }
 
-function updateMediaSession(title) {
-  if ('mediaSession' in navigator) {
-    navigator.mediaSession.metadata = new MediaMetadata({ title: title || '拼写练习', artist: 'Spelling Trainer' });
-  }
-}
-
-function resetPlaybackUI(statusMessage) {
-  setPhase('');
-  document.getElementById('currentWordDisplay').textContent = '';
+function resetGenerateUI(statusMessage) {
+  isGenerating = false;
+  document.getElementById('generateBtn').disabled = false;
+  document.getElementById('cancelBtn').style.display = 'none';
   document.getElementById('statusText').textContent = statusMessage;
-  isPlaying = false;
-  document.getElementById('playBtn').disabled = false;
-  document.getElementById('stopBtn').disabled = true;
 }
 
-function hideSessionDownload() {
-  const box = document.getElementById('sessionDownload');
-  box.style.display = 'none';
-  document.getElementById('sessionDownloadLink').style.display = 'none';
-  if (sessionDownloadUrl) { URL.revokeObjectURL(sessionDownloadUrl); sessionDownloadUrl = null; }
-}
-
-function stopPlayback() {
+function cancelGenerate() {
   stopRequested = true;
-  currentRunId++; // invalidate any in-flight playback run
-  synth.cancel();
-  const player = document.getElementById('ttsPlayer');
-  player.onended = null;
-  player.pause();
-  // Force-resolve any pending chained-audio promise so it doesn't hang.
-  activeResolvers.forEach(r => { try { r(); } catch (e) {} });
-  activeResolvers = [];
-  resetPlaybackUI('已停止');
+  currentRunId++;
+  resetGenerateUI('已取消');
 }
 
-// ---- Legacy sequential playback using system speechSynthesis (no reliable background support) ----
-async function playSelectedSystem(selIdx, rate, letterGap, wordGap, repeat, runId) {
-  const total = selIdx.length * repeat;
-  let count = 0;
-  async function speak(text) { return speakSystem(text, rate); }
-  async function wait(s) { return new Promise(r => { if (stopRequested) { r(); return; } setTimeout(r, s * 1000); }); }
-  async function spellWord(word) {
-    const letters = word.split('');
-    for (let i = 0; i < letters.length; i++) {
-      if (stopRequested || runId !== currentRunId) return;
-      await speak(letters[i].toLowerCase() + '.');
-      if (i < letters.length - 1) await wait(letterGap);
-    }
+async function generateAudio() {
+  if (isGenerating) return;
+  const selIdx = [...selected].sort((a, b) => a - b);
+  if (selIdx.length === 0) {
+    document.getElementById('statusText').textContent = '请先勾选要生成的单词';
+    return;
   }
-  for (let r = 0; r < repeat; r++) {
-    for (const idx of selIdx) {
-      if (stopRequested || runId !== currentRunId) return;
-      const word = words[idx];
-      count++;
-      document.getElementById('currentWordDisplay').textContent = word;
-      document.getElementById('statusText').textContent = `进度 ${count}/${total}`;
-      updateMediaSession(word);
-      setPhase('① 读音'); await speak(word); if (stopRequested || runId !== currentRunId) return; await wait(0.4);
-      setPhase('② 拼读字母'); await spellWord(word); if (stopRequested || runId !== currentRunId) return; await wait(0.4);
-      setPhase('③ 读音'); await speak(word); if (stopRequested || runId !== currentRunId) return;
-      await wait(wordGap);
-    }
+  const apiKey = document.getElementById('googleApiKey').value.trim();
+  if (!apiKey) {
+    document.getElementById('statusText').textContent = '请先点击右上角"设置"填写 Google API Key';
+    document.getElementById('settingsOverlay').classList.add('open');
+    return;
   }
-}
+  const voiceName = document.getElementById('googleVoiceName').value.trim() || DEFAULT_GOOGLE_VOICE;
+  const rate = parseFloat(document.getElementById('rateInput').value) || 0.85;
+  const letterGap = parseFloat(document.getElementById('letterGapInput').value) || 0.4;
+  const wordGap = parseFloat(document.getElementById('wordGapInput').value) || 1.5;
+  const repeat = parseInt(document.getElementById('repeatInput').value) || 1;
 
-// ---- Combine all step audio into one downloadable MP3 (Google mode only) ----
-async function buildSessionMp3(steps, runId) {
-  const box = document.getElementById('sessionDownload');
-  const statusEl = document.getElementById('sessionDownloadStatus');
-  const linkEl = document.getElementById('sessionDownloadLink');
-  if (typeof lamejs === 'undefined') return;
+  isGenerating = true;
+  stopRequested = false;
+  requestedCharsThisRun = 0;
+  currentRunId++;
+  const runId = currentRunId;
+  document.getElementById('generateBtn').disabled = true;
+  document.getElementById('cancelBtn').style.display = 'inline-block';
+  document.getElementById('resultPlayer').style.display = 'none';
 
-  hideSessionDownload();
-  box.style.display = 'block';
-  statusEl.textContent = '正在合成整段发音…';
-  linkEl.style.display = 'none';
-
-  try {
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    const ctx = new AudioCtx();
-    const targetRate = ctx.sampleRate;
-    const chunks = [];
-
-    for (const step of steps) {
-      if (runId !== currentRunId) { ctx.close(); return; }
-      if (step.kind === 'gap') {
-        chunks.push(new Float32Array(Math.round(step.dur * targetRate)));
-      } else {
-        const arrayBuf = await (await fetch(step.url)).arrayBuffer();
-        const audioBuf = await ctx.decodeAudioData(arrayBuf.slice(0));
-        chunks.push(audioBuf.getChannelData(0).slice());
-      }
-    }
-    if (runId !== currentRunId) { ctx.close(); return; }
-
-    let total = 0;
-    chunks.forEach(c => total += c.length);
-    const combined = new Float32Array(total);
-    let offset = 0;
-    chunks.forEach(c => { combined.set(c, offset); offset += c.length; });
-
-    const int16 = new Int16Array(combined.length);
-    for (let i = 0; i < combined.length; i++) {
-      const s = Math.max(-1, Math.min(1, combined[i]));
-      int16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
-    }
-
-    const encoder = new lamejs.Mp3Encoder(1, targetRate, 128);
-    const mp3Data = [];
-    const blockSize = 1152;
-    for (let i = 0; i < int16.length; i += blockSize) {
-      const chunk = int16.subarray(i, i + blockSize);
-      const enc = encoder.encodeBuffer(chunk);
-      if (enc.length > 0) mp3Data.push(enc);
-    }
-    const finalBuf = encoder.flush();
-    if (finalBuf.length > 0) mp3Data.push(finalBuf);
-
-    ctx.close();
-    if (runId !== currentRunId) return;
-
-    const blob = new Blob(mp3Data, { type: 'audio/mp3' });
-    const uniqueWords = [...new Set(steps.filter(s => s.kind === 'word').map(s => s.word))];
-    const label = uniqueWords.length <= 3
-      ? uniqueWords.join('、')
-      : `${uniqueWords.slice(0, 3).join('、')} 等${uniqueWords.length}词`;
-    const sessionHash = await hashString(steps.map(s => s.text || `gap${s.dur}`).join('|') + '|' + Date.now());
-
-    sessionDownloadUrl = URL.createObjectURL(blob);
-    linkEl.href = sessionDownloadUrl;
-    linkEl.download = `spelling_session_${sessionHash.slice(0, 10)}.mp3`;
-    statusEl.textContent = `整段发音已生成 (约 ${(blob.size / 1024).toFixed(0)}KB)，也已存入下方语音缓存库`;
-    linkEl.style.display = 'inline-block';
-
-    await dbPut({
-      key: sessionHash,
-      text: `🎬 整段发音：${label}`,
-      voiceName: 'session',
-      rate: '-',
-      size: blob.size,
-      createdAt: Date.now(),
-      blob,
-      type: 'session'
-    }).catch(() => {});
-    renderCacheList();
-  } catch (err) {
-    console.warn('Failed to build session mp3:', err);
-    statusEl.textContent = '整段发音合成失败（不影响播放）';
-  }
-}
-
-// ---- Google WaveNet playback: builds a queue of real audio clips chained through ONE <audio> element ----
-async function playSelectedGoogle(selIdx, rate, letterGap, wordGap, repeat, apiKey, voiceName, runId) {
-  const player = document.getElementById('ttsPlayer');
   const steps = [];
   for (let r = 0; r < repeat; r++) {
     for (const idx of selIdx) {
@@ -699,106 +562,113 @@ async function playSelectedGoogle(selIdx, rate, letterGap, wordGap, repeat, apiK
     }
   }
 
-  document.getElementById('statusText').textContent = '正在准备语音（未缓存的片段需要联网请求）…';
-  for (const step of steps) {
-    if (stopRequested || runId !== currentRunId) return;
-    if (step.kind === 'gap') {
-      step.url = makeSilenceBlobUrl(step.dur);
+  const uniqueWords = [...new Set(steps.filter(s => s.kind === 'word').map(s => s.word))];
+  const label = uniqueWords.length <= 3
+    ? uniqueWords.join('、')
+    : `${uniqueWords.slice(0, 3).join('、')} 等${uniqueWords.length}词`;
+  const signature = `${voiceName}|${rate}|` + steps.map(s => s.kind === 'gap' ? `gap:${s.dur}` : `${s.kind}:${s.text}`).join('|');
+  const sessionHash = await hashString(signature);
+
+  try {
+    const cachedSession = await dbGet(sessionHash).catch(() => null);
+    let blob;
+    if (cachedSession && cachedSession.blob) {
+      blob = cachedSession.blob;
+      document.getElementById('statusText').textContent = `已复用缓存的录音 (约 ${(blob.size / 1024).toFixed(0)}KB)，本次未请求 API（0 字符）`;
     } else {
-      try {
-        step.url = await fetchGoogleTTSUrl(step.text, apiKey, voiceName, rate);
-      } catch (err) {
-        console.warn('Google TTS failed, falling back to system voice for this run:', err);
-        document.getElementById('statusText').textContent = 'Google 请求失败，已自动切换回系统语音';
-        return playSelectedSystem(selIdx, rate, letterGap, wordGap, repeat, runId);
-      }
-    }
-  }
-  if (stopRequested || runId !== currentRunId) return;
+      document.getElementById('statusText').textContent = '正在获取语音片段（未缓存的部分需要联网请求）…';
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      const ctx = new AudioCtx();
+      const targetRate = ctx.sampleRate;
+      const chunks = [];
 
-  const total = selIdx.length * repeat;
-  let wordCount = 0;
-  let i = 0;
-
-  // Kick off mp3 synthesis in parallel with playback (all clip URLs are already known
-  // at this point), instead of waiting for playback to finish first. This makes the
-  // download link appear right after playback ends instead of noticeably later.
-  const mp3Promise = buildSessionMp3(steps, runId);
-
-  await new Promise((resolve) => {
-    activeResolvers.push(resolve);
-    function playNext() {
-      if (stopRequested || runId !== currentRunId || i >= steps.length) { resolve(); return; }
-      const step = steps[i];
-      if (step.kind === 'word') {
-        document.getElementById('currentWordDisplay').textContent = step.word;
-        updateMediaSession(step.word);
-        const wordOccurrencesBefore = steps.slice(0, i).filter(s => s.kind === 'word' && s.word === step.word).length;
-        setPhase(wordOccurrencesBefore % 2 === 0 ? '① 读音' : '③ 读音');
-        if (wordOccurrencesBefore === 0) {
-          wordCount++;
-          document.getElementById('statusText').textContent = `进度 ${wordCount}/${total}`;
+      for (const step of steps) {
+        if (stopRequested || runId !== currentRunId) { ctx.close(); return; }
+        if (step.kind === 'gap') {
+          chunks.push(makeSilenceFloat(step.dur, targetRate));
+        } else {
+          const clipBlob = await fetchGoogleTTSClip(step.text, apiKey, voiceName, rate);
+          const arrayBuf = await clipBlob.arrayBuffer();
+          const audioBuf = await ctx.decodeAudioData(arrayBuf.slice(0));
+          chunks.push(audioBuf.getChannelData(0).slice());
         }
-      } else if (step.kind === 'letter') {
-        setPhase('② 拼读字母');
       }
-      player.src = step.url;
-      player.playbackRate = 1;
-      player.play().catch(() => { i++; playNext(); });
-      i++;
+      if (stopRequested || runId !== currentRunId) { ctx.close(); return; }
+
+      document.getElementById('statusText').textContent = '正在合成整段发音…';
+      let total = 0;
+      chunks.forEach(c => total += c.length);
+      const combined = new Float32Array(total);
+      let offset = 0;
+      chunks.forEach(c => { combined.set(c, offset); offset += c.length; });
+
+      const int16 = new Int16Array(combined.length);
+      for (let i = 0; i < combined.length; i++) {
+        const s = Math.max(-1, Math.min(1, combined[i]));
+        int16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+      }
+
+      const encoder = new lamejs.Mp3Encoder(1, targetRate, 128);
+      const mp3Data = [];
+      const blockSize = 1152;
+      for (let i = 0; i < int16.length; i += blockSize) {
+        const chunk = int16.subarray(i, i + blockSize);
+        const enc = encoder.encodeBuffer(chunk);
+        if (enc.length > 0) mp3Data.push(enc);
+      }
+      const finalBuf = encoder.flush();
+      if (finalBuf.length > 0) mp3Data.push(finalBuf);
+      ctx.close();
+      if (stopRequested || runId !== currentRunId) return;
+
+      blob = new Blob(mp3Data, { type: 'audio/mp3' });
+      await dbPut({
+        key: sessionHash,
+        text: label,
+        voiceName,
+        rate,
+        size: blob.size,
+        createdAt: Date.now(),
+        blob,
+        type: 'session'
+      }).catch(() => {});
+      document.getElementById('statusText').textContent = `生成完成 (约 ${(blob.size / 1024).toFixed(0)}KB)，本次请求 API 字符数：${requestedCharsThisRun}（其余片段复用缓存）`;
     }
-    player.onended = playNext;
-    playNext();
-  });
+    addApiUsage(requestedCharsThisRun);
 
-  await mp3Promise.catch(() => {});
-}
+    if (resultObjectUrl) URL.revokeObjectURL(resultObjectUrl);
+    resultObjectUrl = URL.createObjectURL(blob);
+    document.getElementById('resultAudio').src = resultObjectUrl;
+    const dl = document.getElementById('resultDownloadLink');
+    dl.href = resultObjectUrl;
+    dl.download = `spelling_${sessionHash.slice(0, 10)}.mp3`;
+    document.getElementById('resultPlayer').style.display = 'block';
 
-async function playSelected() {
-  if (isPlaying) return;
-  const selIdx = [...selected].sort((a, b) => a - b);
-  if (selIdx.length === 0) {
-    document.getElementById('statusText').textContent = '请先勾选要播放的单词';
-    return;
-  }
-  isPlaying = true;
-  stopRequested = false;
-  currentRunId++;
-  const runId = currentRunId;
-  document.getElementById('playBtn').disabled = true;
-  document.getElementById('stopBtn').disabled = false;
-  hideSessionDownload();
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.metadata = new MediaMetadata({ title: label, artist: 'Spelling Trainer' });
+    }
 
-  const rate = parseFloat(document.getElementById('rateInput').value) || 0.85;
-  const letterGap = parseFloat(document.getElementById('letterGapInput').value) || 0.4;
-  const wordGap = parseFloat(document.getElementById('wordGapInput').value) || 1.5;
-  const repeat = parseInt(document.getElementById('repeatInput').value) || 1;
-  const useGoogle = document.getElementById('useGoogleToggle').checked;
-  const apiKey = document.getElementById('googleApiKey').value.trim();
-  const voiceName = document.getElementById('googleVoiceName').value.trim() || DEFAULT_GOOGLE_VOICE;
-
-  if (useGoogle && apiKey) {
-    const player = document.getElementById('ttsPlayer');
-    if (!unlockSrc) unlockSrc = makeSilenceBlobUrl(0.05);
-    player.src = unlockSrc;
-    player.play().catch(() => {});
-    await playSelectedGoogle(selIdx, rate, letterGap, wordGap, repeat, apiKey, voiceName, runId);
-  } else {
-    await playSelectedSystem(selIdx, rate, letterGap, wordGap, repeat, runId);
+    renderCacheList();
+  } catch (err) {
+    console.error('Generate failed:', err);
+    document.getElementById('statusText').textContent = '生成失败：' + err.message;
   }
 
-  if (runId !== currentRunId) return; // a newer run (or stop) already handled the UI reset
-  resetPlaybackUI(stopRequested ? '已停止' : '播放完成 ✅');
+  if (runId === currentRunId) {
+    isGenerating = false;
+    document.getElementById('generateBtn').disabled = false;
+    document.getElementById('cancelBtn').style.display = 'none';
+  }
 }
 
-// ---- Cache list UI ----
+// ---- Cache list UI: only show integrated ("session") recordings ----
 const cacheBlobUrls = new Map();
 
 async function renderCacheList() {
   const ul = document.getElementById('cacheList');
   const emptyHint = document.getElementById('cacheEmptyHint');
-  const items = await dbGetAll().catch(() => []);
-  items.sort((a, b) => b.createdAt - a.createdAt);
+  const all = await dbGetAll().catch(() => []);
+  const items = all.filter(item => item.type === 'session').sort((a, b) => b.createdAt - a.createdAt);
 
   cacheBlobUrls.forEach(url => URL.revokeObjectURL(url));
   cacheBlobUrls.clear();
@@ -816,13 +686,11 @@ async function renderCacheList() {
 
     const label = document.createElement('span');
     label.className = 'cache-label';
-    label.textContent = item.type === 'session' ? item.text : item.text.replace(/\.$/, '');
+    label.textContent = item.text;
 
     const sub = document.createElement('span');
     sub.className = 'cache-sub';
-    sub.textContent = item.type === 'session'
-      ? `整段录音 · ${(item.size / 1024).toFixed(0)}KB · #${item.key.slice(0, 8)}`
-      : `${item.voiceName} · ${(item.size / 1024).toFixed(0)}KB · #${item.key.slice(0, 8)}`;
+    sub.textContent = `${(item.size / 1024).toFixed(0)}KB · #${item.key.slice(0, 8)}`;
 
     const audio = document.createElement('audio');
     audio.className = 'cache-audio';
@@ -834,16 +702,13 @@ async function renderCacheList() {
     actions.className = 'cache-actions';
     const dl = document.createElement('a');
     dl.href = url;
-    dl.download = item.type === 'session'
-      ? `spelling_session_${item.key.slice(0, 10)}.mp3`
-      : `${item.text.replace(/[^a-zA-Z]/g, '') || 'clip'}_${item.key.slice(0, 8)}.mp3`;
+    dl.download = `spelling_${item.key.slice(0, 10)}.mp3`;
     dl.textContent = '下载';
     const delBtn = document.createElement('button');
     delBtn.className = 'danger';
     delBtn.textContent = '删除';
     delBtn.addEventListener('click', async () => {
       await dbDelete(item.key);
-      ttsUrlCache.delete(item.key);
       renderCacheList();
     });
     actions.appendChild(dl);
@@ -856,13 +721,66 @@ async function renderCacheList() {
     ul.appendChild(li);
   });
 
-  document.getElementById('cacheInfo').textContent = `共 ${items.length} 个片段，约 ${(totalSize / 1024 / 1024).toFixed(2)}MB`;
+  document.getElementById('cacheInfo').textContent = `共 ${items.length} 个，约 ${(totalSize / 1024 / 1024).toFixed(2)}MB`;
+}
+
+// ---- Raw individual clip cache list (shown inside the settings modal) ----
+async function renderClipCacheList() {
+  const ul = document.getElementById('clipCacheList');
+  const emptyHint = document.getElementById('clipCacheEmptyHint');
+  const all = await dbGetAll().catch(() => []);
+  const items = all.filter(item => item.type === 'clip').sort((a, b) => b.createdAt - a.createdAt);
+
+  ul.innerHTML = '';
+  emptyHint.style.display = items.length === 0 ? 'block' : 'none';
+
+  let totalSize = 0;
+  items.forEach(item => {
+    totalSize += item.size || 0;
+    const li = document.createElement('li');
+
+    const left = document.createElement('div');
+    const textSpan = document.createElement('div');
+    textSpan.className = 'clip-text';
+    textSpan.textContent = item.text.replace(/\.$/, '');
+    const subSpan = document.createElement('div');
+    subSpan.className = 'clip-sub';
+    subSpan.textContent = `${item.voiceName} · ${(item.size / 1024).toFixed(0)}KB · #${item.key.slice(0, 8)}`;
+    left.appendChild(textSpan);
+    left.appendChild(subSpan);
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'danger clip-del';
+    delBtn.textContent = '删除';
+    delBtn.addEventListener('click', async () => {
+      await dbDelete(item.key);
+      ttsUrlCache.delete(item.key);
+      renderClipCacheList();
+    });
+
+    li.appendChild(left);
+    li.appendChild(delBtn);
+    ul.appendChild(li);
+  });
+
+  document.getElementById('clipCacheInfo').textContent = `共 ${items.length} 个片段，约 ${(totalSize / 1024 / 1024).toFixed(2)}MB`;
 }
 
 document.getElementById('clearCacheBtn').addEventListener('click', async () => {
-  await dbClear();
-  ttsUrlCache.clear();
+  const all = await dbGetAll().catch(() => []);
+  for (const item of all) {
+    if (item.type === 'session') await dbDelete(item.key);
+  }
   renderCacheList();
+});
+
+document.getElementById('clearClipCacheBtn').addEventListener('click', async () => {
+  const all = await dbGetAll().catch(() => []);
+  for (const item of all) {
+    if (item.type === 'clip') await dbDelete(item.key);
+  }
+  ttsUrlCache.clear();
+  renderClipCacheList();
 });
 
 document.getElementById('addBtn').addEventListener('click', () => {
@@ -900,8 +818,8 @@ document.getElementById('deleteSelBtn').addEventListener('click', () => {
   saveSelected();
   renderList();
 });
-document.getElementById('playBtn').addEventListener('click', playSelected);
-document.getElementById('stopBtn').addEventListener('click', stopPlayback);
+document.getElementById('generateBtn').addEventListener('click', generateAudio);
+document.getElementById('cancelBtn').addEventListener('click', cancelGenerate);
 
 document.getElementById('exportBtn').addEventListener('click', () => {
   const blob = new Blob([JSON.stringify(words, null, 2)], { type: 'application/json' });
@@ -937,33 +855,12 @@ document.getElementById('importFile').addEventListener('change', (e) => {
   reader.readAsText(file);
 });
 
-['rateInput', 'letterGapInput', 'wordGapInput', 'repeatInput', 'useGoogleToggle', 'googleApiKey', 'googleVoiceName'].forEach(id => {
-  document.getElementById(id).addEventListener('change', saveSettings);
-});
-
-function applySavedSettings() {
-  const settings = loadSettings();
-  if (settings.rate) document.getElementById('rateInput').value = settings.rate;
-  if (settings.letterGap) document.getElementById('letterGapInput').value = settings.letterGap;
-  if (settings.wordGap) document.getElementById('wordGapInput').value = settings.wordGap;
-  if (settings.repeat) document.getElementById('repeatInput').value = settings.repeat;
-  if (settings.useGoogle) document.getElementById('useGoogleToggle').checked = settings.useGoogle;
-  if (settings.googleApiKey) document.getElementById('googleApiKey').value = settings.googleApiKey;
-  if (settings.googleVoiceName) document.getElementById('googleVoiceName').value = settings.googleVoiceName;
-}
-
-if ('mediaSession' in navigator) {
-  navigator.mediaSession.setActionHandler('pause', () => stopPlayback());
-  navigator.mediaSession.setActionHandler('stop', () => stopPlayback());
-}
-
-if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = populateVoices;
 applySavedSettings();
-populateVoices();
 loadWords();
 loadSelected();
 renderList();
 renderCacheList();
+renderApiUsage();
 </script>
 </body>
 </html>
