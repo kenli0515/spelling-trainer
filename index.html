@@ -228,7 +228,10 @@
     </div>
 
     <div class="modal-note">
-      使用 Google WaveNet 高质量语音生成读音。需要在 Google Cloud 控制台开通 "Cloud Text-to-Speech API"（不是 Speech-to-Text）并启用结算（有免费额度）。API Key 只保存在你当前浏览器的 localStorage，只会直接发给 Google 官方接口。
+      使用 Google 高质量语音生成读音。默认使用 Chirp 3: HD 女声（en-US-Chirp3-HD-Aoede），也可以在下面手动改成其它 Chirp3-HD / WaveNet 语音名称。需要在 Google Cloud 控制台开通 "Cloud Text-to-Speech API"（不是 Speech-to-Text）并启用结算（有免费额度）。API Key 只保存在你当前浏览器的 localStorage，只会直接发给 Google 官方接口。
+    </div>
+    <div class="modal-note" style="background:var(--bg);padding:8px 10px;border-radius:8px;">
+      Chirp 3: HD 女声可选：Aoede、Autonoe、Callirrhoe、Despina、Erinome、Gacrux、Kore、Laomedeia、Leda、Pulcherrima、Sulafat、Vindemiatrix、Zephyr、Achernar。填法例如 en-US-Chirp3-HD-Kore。
     </div>
     <div class="modal-note" id="apiUsageInfo" style="background:var(--bg);padding:8px 10px;border-radius:8px;">
       累计已请求字符数：0
@@ -239,12 +242,12 @@
     </div>
     <div class="modal-row">
       <label>语音名称</label>
-      <input type="text" id="googleVoiceName" placeholder="默认 en-US-Wavenet-F">
+      <input type="text" id="googleVoiceName" placeholder="默认 en-US-Chirp3-HD-Aoede">
     </div>
     <div class="modal-grid">
       <div class="modal-row">
         <label>语速</label>
-        <input type="number" id="rateInput" value="0.85" min="0.3" max="1.5" step="0.05">
+        <input type="number" id="rateInput" value="0.85" min="0.25" max="2" step="0.05">
       </div>
       <div class="modal-row">
         <label>重复次数</label>
@@ -280,7 +283,7 @@ const STORAGE_KEY = 'spelling_trainer_words_v1';
 const SELECTED_KEY = 'spelling_trainer_selected_v1';
 const SETTINGS_KEY = 'spelling_trainer_settings_v1';
 const DARK_MODE_KEY = 'spelling_trainer_dark_mode_v1';
-const DEFAULT_GOOGLE_VOICE = 'en-US-Wavenet-F';
+const DEFAULT_GOOGLE_VOICE = 'en-US-Chirp3-HD-Aoede';
 const DB_NAME = 'spelling_trainer_db';
 const DB_STORE = 'ttsCache';
 const API_USAGE_KEY = 'spelling_trainer_api_usage_v1';
@@ -412,7 +415,7 @@ function renderApiUsage() {
   const usage = loadApiUsage();
   const el = document.getElementById('apiUsageInfo');
   if (el) {
-    el.textContent = `累计已请求字符数：${(usage.totalChars || 0).toLocaleString()} （WaveNet 每月前 100 万字符免费，之后约 $16/百万字符）`;
+    el.textContent = `累计已请求字符数：${(usage.totalChars || 0).toLocaleString()} （WaveNet 每月前 100 万字符免费，之后约 $16/百万字符；Chirp3-HD 计费更高，请以 Google 控制台账单为准）`;
   }
 }
 
@@ -542,7 +545,7 @@ async function fetchGoogleTTSClip(text, apiKey, voiceName, rate) {
     body: JSON.stringify({
       input: { text },
       voice: { languageCode: extractLangCode(voiceName), name: voiceName },
-      audioConfig: { audioEncoding: 'MP3', speakingRate: Math.min(4, Math.max(0.25, rate)) }
+      audioConfig: { audioEncoding: 'MP3', speakingRate: Math.min(2, Math.max(0.25, rate)) }
     })
   });
   if (!resp.ok) {
